@@ -25,6 +25,7 @@ public class CreateItemProcessor implements RequestProcessor {
                 "HTTP/1.1 201 Created\r\n" +
                 "Content-Type: application/json\r\n" +
                 "\r\n";
+        
         output.write(response.getBytes(StandardCharsets.UTF_8));
     }
 }

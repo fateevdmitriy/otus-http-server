@@ -49,6 +49,7 @@ public class GetItemProcessor implements RequestProcessor {
                 "Content-Type: application/json\r\n" +
                 "\r\n" +
                 itemsResponse;
+        
         output.write(response.getBytes(StandardCharsets.UTF_8));
     }
 }
