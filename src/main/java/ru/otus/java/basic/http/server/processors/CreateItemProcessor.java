@@ -7,14 +7,17 @@ import ru.otus.java.basic.http.server.application.ItemsRepository;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 
 public class CreateItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(CreateItemProcessor.class);
     private ItemsRepository itemsRepository;
-    
+
     public CreateItemProcessor(ItemsRepository itemsRepository) {
         this.itemsRepository = itemsRepository;
     }
@@ -23,13 +26,19 @@ public class CreateItemProcessor implements RequestProcessor {
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         Gson gson = new Gson();
         Item newItem = gson.fromJson(request.getBody(), Item.class);
+        if (newItem.getTitle() == null) {
+            throw new BadRequestException("INCORRECT_REQUEST_DATA", "В параметре запроса название продукта не может быть пустым.");
+        }
+        if (newItem.getPrice() != null && newItem.getPrice().compareTo(BigDecimal.ZERO) < 0) {
+            throw new BadRequestException("INCORRECT_REQUEST_DATA", "В параметре запроса цена продукта не может быть отрицательной.");
+        }
         itemsRepository.addNewItem(newItem);
         String response = "" +
                 "HTTP/1.1 201 Created\r\n" +
                 "Content-Type: application/json\r\n" +
                 "\r\n";
-        
-        logger.info("Запущен обработчик HTTP-запросов: {} ", CreateItemProcessor.class.getName());    
+
+        logger.info("Запущен обработчик HTTP-запросов: {} ", CreateItemProcessor.class.getName());
         output.write(response.getBytes(StandardCharsets.UTF_8));
     }
 }

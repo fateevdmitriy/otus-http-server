@@ -7,15 +7,31 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 
 public class CalculatorProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(CalculatorProcessor.class);
     
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
-        int a = Integer.parseInt(request.getParameter("a"));
-        int b = Integer.parseInt(request.getParameter("b"));
-        
+        if (!request.containsParameter("a")) {
+            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Отсутствует параметр запроса 'a'");
+        }
+        if (!request.containsParameter("b")) {
+            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Отсутствует параметр запроса 'b'");
+        }
+        int a;
+        try {
+            a = Integer.parseInt(request.getParameter("a"));    
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Параметр запроса 'а' не является целым числом");    
+        }
+        int b;
+        try {
+            b = Integer.parseInt(request.getParameter("b"));
+        } catch (NumberFormatException e) {
+            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Параметр запроса 'b' не является целым числом");
+        }
         String response = "" +
                 "HTTP/1.1 200 OK\r\n" +
                 "Content-Type: text/html\r\n" +

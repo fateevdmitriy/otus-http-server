@@ -27,13 +27,17 @@ public class HttpRequest {
     public String getUri() {
         return uri;
     }
-
+    
     public String getParameter(String key) {
         return parameters.get(key);
     }
 
     public String getRoutingKey() {
         return method + " " + uri;
+    }
+
+    public boolean containsParameter(String key) {
+        return parameters.containsKey(key);
     }
 
     private void parse() {
