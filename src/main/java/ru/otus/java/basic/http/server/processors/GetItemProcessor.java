@@ -22,6 +22,7 @@ public class GetItemProcessor implements RequestProcessor {
 
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
+        logger.info("Запущен обработчик HTTP-запросов: {}", GetItemProcessor.class.getName());
         if (request.getParameter("id") != null) {
             Long id = Long.parseLong(request.getParameter("id"));
             Item item = itemsRepository.findById(id);
@@ -31,9 +32,6 @@ public class GetItemProcessor implements RequestProcessor {
                         "Content-Type: text/html\r\n" +
                         "\r\n" +
                         "RESOURCE NOT FOUND";
-
-                logger.info("Запущен обработчик HTTP-запросов: {}. Возвращает ошибку т.к. товар с заданным id не найден.",
-                        GetItemProcessor.class.getName());
                 output.write(response.getBytes(StandardCharsets.UTF_8));
                 return;
             }
@@ -44,8 +42,6 @@ public class GetItemProcessor implements RequestProcessor {
                     "Content-Type: application/json\r\n" +
                     "\r\n" +
                     itemResponse;
-            
-            logger.info("Запущен обработчик HTTP-запросов: {}. Возвращает товар с заданным id.", GetItemProcessor.class.getName());    
             output.write(response.getBytes(StandardCharsets.UTF_8));
             return;
         }
@@ -57,8 +53,6 @@ public class GetItemProcessor implements RequestProcessor {
                 "Content-Type: application/json\r\n" +
                 "\r\n" +
                 itemsResponse;
-        
-        logger.info("Запущен обработчик HTTP-запросов: {}. Возвращает перечень товаров.", GetItemProcessor.class.getName());    
         output.write(response.getBytes(StandardCharsets.UTF_8));
     }
 }

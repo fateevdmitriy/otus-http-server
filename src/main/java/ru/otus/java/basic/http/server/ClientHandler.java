@@ -5,28 +5,32 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 
 public class ClientHandler implements Runnable {
     private final Socket clientSocket;
     private final Dispatcher dispatcher;
-    private final BufferedReader in;
-    private final BufferedWriter out;
     private static final Logger logger = LogManager.getLogger(ClientHandler.class);
 
     public ClientHandler(Socket clientSocket) throws IOException {
         this.clientSocket = clientSocket;
         this.dispatcher = new Dispatcher();
-        this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.UTF_8));
-        this.out =  new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream(), StandardCharsets.UTF_8));
     }
 
     @Override
     public void run() {
         try {
-            System.out.println("Новый клиент подключился к серверу.");
-            logger.info("[Info] Новый клиент подключился к серверу.");
-            String rawRequest = in.readLine();
+            logger.info("Новый клиент подключился к серверу.");
+            byte[] buffer = new byte[8192];
+            int n = clientSocket.getInputStream().read(buffer);
+            if (n < 0) {
+                logger.error("Получено битое сообщение от клиента.");
+                throw new IOException("Получено битое сообщение.");
+            } 
+            String rawRequest = new String(buffer, 0, n);
+            if (rawRequest.isEmpty()) {
+                logger.error("Получен пустой запрос от клиента.");
+                throw new IOException("Получен пустой запрос от клиента.");
+            }
             HttpRequest request = new HttpRequest(rawRequest);
             request.info(true);
             dispatcher.execute(request, clientSocket.getOutputStream());
@@ -40,20 +44,16 @@ public class ClientHandler implements Runnable {
 
     public void disconnect() {
         try {
-            logger.info("[Info] Завершение соединения клиента с сервером.");
-            if (in != null) {
-                in.close();
+            if (clientSocket.getInputStream() != null) {
+                clientSocket.getInputStream().close();
             }
-            if (out != null) {
-                out.close();
+            if (clientSocket.getOutputStream() != null) {
+                clientSocket.getOutputStream().close();
             }
-            if (clientSocket != null) {
-                clientSocket.close();
-                }
+            clientSocket.close();             
         } catch (IOException e) {
             logger.error("Возникла исключительная ситуация при завершении соединения клиента с сервером.");
             e.printStackTrace();
-            throw new RuntimeException(e);
         }
     }
 }

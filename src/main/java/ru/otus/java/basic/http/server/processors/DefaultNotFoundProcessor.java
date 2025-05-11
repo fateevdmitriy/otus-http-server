@@ -13,12 +13,12 @@ public class DefaultNotFoundProcessor implements RequestProcessor {
 
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
+        logger.info("Запущен обработчик HTTP-запросов: {} ", DefaultNotFoundProcessor.class.getName());
         String response = "" +
                 "HTTP/1.1 404 Not Found\r\n" +
                 "Content-Type: text/html\r\n" +
                 "\r\n" +
                 "<html><body><h1>PAGE NOT FOUND</h1></body></html>";
-        logger.info("Запущен обработчик HTTP-запросов: {} ", DefaultNotFoundProcessor.class.getName());
         output.write(response.getBytes(StandardCharsets.UTF_8));
     }
 }

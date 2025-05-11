@@ -13,13 +13,17 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 
 public class Dispatcher {
+    private static final Logger logger = LogManager.getLogger(Dispatcher.class);
     private final static String HTTP_500_ERR_MSG = "Server encountered an unexpected condition that prevented it from fulfilling the request.";
     private final Map<String, RequestProcessor> processors;
-    private ItemsRepository itemsRepository;
+    private final ItemsRepository itemsRepository;
     private final RequestProcessor defaultNotFoundProcessor;
-    private RequestProcessor defaultStaticResourceProcessor;
+    private final RequestProcessor defaultStaticResourceProcessor;
 
     public Dispatcher() {
         this.itemsRepository = new ItemsRepository();
@@ -33,6 +37,7 @@ public class Dispatcher {
     }
 
     public void execute(HttpRequest request, OutputStream output) throws IOException {
+        logger.info("Запуск диспетчера запросов.");
         if (Files.exists(Paths.get("static/", request.getUri().substring(1)))) {
             defaultStaticResourceProcessor.execute(request, output);
             return;

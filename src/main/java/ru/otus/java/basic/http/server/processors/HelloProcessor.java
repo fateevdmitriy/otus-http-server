@@ -13,13 +13,12 @@ public class HelloProcessor implements RequestProcessor {
     
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
+        logger.info("Запущен обработчик HTTP-запросов: {} ", HelloProcessor.class.getName());
         String response = "" +
                 "HTTP/1.1 200 OK\r\n" +
                 "Content-Type: text/html\r\n" +
                 "\r\n" +
                 "<html><body><h1>Hello, USER!!!</h1></body></html>";
-
-        logger.info("Запущен обработчик HTTP-запросов: {} ", HelloProcessor.class.getName());
         output.write(response.getBytes(StandardCharsets.UTF_8));
     }
 }
