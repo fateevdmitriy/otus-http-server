@@ -8,10 +8,13 @@ import ru.otus.java.basic.http.server.application.ItemsRepository;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CreateItemProcessor implements RequestProcessor {
+    private static final Logger logger = LogManager.getLogger(CreateItemProcessor.class);
     private ItemsRepository itemsRepository;
-
+    
     public CreateItemProcessor(ItemsRepository itemsRepository) {
         this.itemsRepository = itemsRepository;
     }
@@ -26,6 +29,7 @@ public class CreateItemProcessor implements RequestProcessor {
                 "Content-Type: application/json\r\n" +
                 "\r\n";
         
+        logger.info("Запущен обработчик HTTP-запросов: {} ", CreateItemProcessor.class.getName());    
         output.write(response.getBytes(StandardCharsets.UTF_8));
     }
 }

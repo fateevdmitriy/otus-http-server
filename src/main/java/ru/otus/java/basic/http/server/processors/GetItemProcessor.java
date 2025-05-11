@@ -9,8 +9,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GetItemProcessor implements RequestProcessor {
+    private static final Logger logger = LogManager.getLogger(GetItemProcessor.class);
     private ItemsRepository itemsRepository;
 
     public GetItemProcessor(ItemsRepository itemsRepository) {
@@ -28,7 +31,9 @@ public class GetItemProcessor implements RequestProcessor {
                         "Content-Type: text/html\r\n" +
                         "\r\n" +
                         "RESOURCE NOT FOUND";
-                
+
+                logger.info("Запущен обработчик HTTP-запросов: {}. Возвращает ошибку т.к. товар с заданным id не найден.",
+                        GetItemProcessor.class.getName());
                 output.write(response.getBytes(StandardCharsets.UTF_8));
                 return;
             }
@@ -40,6 +45,7 @@ public class GetItemProcessor implements RequestProcessor {
                     "\r\n" +
                     itemResponse;
             
+            logger.info("Запущен обработчик HTTP-запросов: {}. Возвращает товар с заданным id.", GetItemProcessor.class.getName());    
             output.write(response.getBytes(StandardCharsets.UTF_8));
             return;
         }
@@ -52,6 +58,7 @@ public class GetItemProcessor implements RequestProcessor {
                 "\r\n" +
                 itemsResponse;
         
+        logger.info("Запущен обработчик HTTP-запросов: {}. Возвращает перечень товаров.", GetItemProcessor.class.getName());    
         output.write(response.getBytes(StandardCharsets.UTF_8));
     }
 }
