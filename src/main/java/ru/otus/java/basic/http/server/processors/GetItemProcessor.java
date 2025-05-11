@@ -28,6 +28,7 @@ public class GetItemProcessor implements RequestProcessor {
                         "Content-Type: text/html\r\n" +
                         "\r\n" +
                         "RESOURCE NOT FOUND";
+                
                 output.write(response.getBytes(StandardCharsets.UTF_8));
                 return;
             }
@@ -38,6 +39,7 @@ public class GetItemProcessor implements RequestProcessor {
                     "Content-Type: application/json\r\n" +
                     "\r\n" +
                     itemResponse;
+            
             output.write(response.getBytes(StandardCharsets.UTF_8));
             return;
         }

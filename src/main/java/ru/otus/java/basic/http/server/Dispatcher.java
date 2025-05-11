@@ -9,12 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Dispatcher {
-    private Map<String, RequestProcessor> processors;
-    private ItemsRepository itemsRepository;
-    private RequestProcessor defaultNotFoundProcessor;
+    private final Map<String, RequestProcessor> processors;
+    private final RequestProcessor defaultNotFoundProcessor;
 
     public Dispatcher() {
-        this.itemsRepository = new ItemsRepository();
+        ItemsRepository itemsRepository = new ItemsRepository();
         this.processors = new HashMap<>();
         this.processors.put("GET /hello", new HelloProcessor());
         this.processors.put("GET /calculator", new CalculatorProcessor());
