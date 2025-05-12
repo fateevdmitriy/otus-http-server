@@ -9,7 +9,7 @@ import org.apache.logging.log4j.Logger;
 
 public class HttpServer {
     private final int port;
-    private static final Logger logger = LogManager.getLogger(Application.class);     
+    private static final Logger logger = LogManager.getLogger(HttpServer.class);     
     
     public HttpServer(int port) {
         this.port = port;

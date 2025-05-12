@@ -1,8 +1,8 @@
 package ru.otus.java.basic.http.server.exceptions;
 
 public class BadRequestException extends RuntimeException{    
-    private String code;
-    private String description;
+    private final String code;
+    private final String description;
     
     public String getCode() {
         return code;

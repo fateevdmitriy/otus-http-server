@@ -13,13 +13,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 
 public class Dispatcher {
     private static final Logger logger = LogManager.getLogger(Dispatcher.class);
-    private final static String HTTP_500_ERR_MSG = "Server encountered an unexpected condition that prevented it from fulfilling the request.";
+    private static final String HTTP_500_ERR_MSG = "Server encountered an unexpected condition that prevented it from fulfilling the request.";
     private final Map<String, RequestProcessor> processors;
     private final ItemsRepository itemsRepository;
     private final RequestProcessor defaultNotFoundProcessor;

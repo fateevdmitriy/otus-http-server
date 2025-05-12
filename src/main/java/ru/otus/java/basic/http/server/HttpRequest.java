@@ -78,6 +78,6 @@ public class HttpRequest {
         logger.info("METHOD: {}", method);
         logger.info("URI: {}", uri);
         logger.info("PARAMETERS: {}", parameters);
-        logger.info("BODY: " + body);
+        logger.info("BODY: {}",  body);
     }
 }

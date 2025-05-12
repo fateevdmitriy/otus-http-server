@@ -11,7 +11,7 @@ public class ClientHandler implements Runnable {
     private final Dispatcher dispatcher;
     private static final Logger logger = LogManager.getLogger(ClientHandler.class);
 
-    public ClientHandler(Socket clientSocket) throws IOException {
+    public ClientHandler(Socket clientSocket) {
         this.clientSocket = clientSocket;
         this.dispatcher = new Dispatcher();
     }
