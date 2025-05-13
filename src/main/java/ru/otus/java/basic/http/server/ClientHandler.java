@@ -40,7 +40,7 @@ public class ClientHandler implements Runnable {
             request.info(true);
             dispatcher.execute(request, clientSocket.getOutputStream());
         } catch (IOException e) {
-            logger.error("Возникла исключительная ситуация при выполнении соединения клиента с сервером.");
+            logger.error("Возникла исключительная ситуация при выполнении соединения клиента с сервером. {}", e.getMessage());
             e.printStackTrace();
         } finally {
             disconnect();
