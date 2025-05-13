@@ -7,6 +7,7 @@ import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
+    private static final int BUFFER_SIZE = 8192;  
     private final Socket clientSocket;
     private final Dispatcher dispatcher;
     private static final Logger logger = LogManager.getLogger(ClientHandler.class);
@@ -20,11 +21,15 @@ public class ClientHandler implements Runnable {
     public void run() {
         try {
             logger.info("Новый клиент подключился к серверу.");
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[BUFFER_SIZE];
             int n = clientSocket.getInputStream().read(buffer);
+            if (n == 0) {
+                logger.error("Получено пустое сообщение от клиента.");
+                throw new IOException("Получено пустое сообщение от клиента.");
+            }
             if (n < 0) {
                 logger.error("Получено битое сообщение от клиента.");
-                throw new IOException("Получено битое сообщение.");
+                throw new IOException("Получено битое сообщение от клиента.");
             } 
             String rawRequest = new String(buffer, 0, n);
             if (rawRequest.isEmpty()) {
