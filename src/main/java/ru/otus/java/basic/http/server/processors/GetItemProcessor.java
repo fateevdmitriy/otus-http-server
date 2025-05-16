@@ -9,8 +9,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class GetItemProcessor implements RequestProcessor {
+    private static final Logger logger = LogManager.getLogger(GetItemProcessor.class);
     private ItemsRepository itemsRepository;
 
     public GetItemProcessor(ItemsRepository itemsRepository) {
@@ -19,6 +22,7 @@ public class GetItemProcessor implements RequestProcessor {
 
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
+        logger.info("Запущен обработчик HTTP-запросов: {}", GetItemProcessor.class.getName());
         if (request.getParameter("id") != null) {
             Long id = Long.parseLong(request.getParameter("id"));
             Item item = itemsRepository.findById(id);
@@ -28,7 +32,6 @@ public class GetItemProcessor implements RequestProcessor {
                         "Content-Type: text/html\r\n" +
                         "\r\n" +
                         "RESOURCE NOT FOUND";
-                
                 output.write(response.getBytes(StandardCharsets.UTF_8));
                 return;
             }
@@ -39,7 +42,6 @@ public class GetItemProcessor implements RequestProcessor {
                     "Content-Type: application/json\r\n" +
                     "\r\n" +
                     itemResponse;
-            
             output.write(response.getBytes(StandardCharsets.UTF_8));
             return;
         }
@@ -51,7 +53,6 @@ public class GetItemProcessor implements RequestProcessor {
                 "Content-Type: application/json\r\n" +
                 "\r\n" +
                 itemsResponse;
-        
         output.write(response.getBytes(StandardCharsets.UTF_8));
     }
 }

@@ -3,18 +3,17 @@ package ru.otus.java.basic.http.server;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+
 public class HttpRequest {
+    private static final Logger logger = LogManager.getLogger(HttpRequest.class);
     private final String rawRequest;
     private HttpMethod method;
     private String body;
     private String uri;
     private Map<String, String> parameters;
-
-    public HttpRequest(String rawRequest) {
-        this.rawRequest = rawRequest;
-        this.parameters = new HashMap<>();
-        this.parse();
-    }
 
     public HttpMethod getMethod() {
         return method;
@@ -36,11 +35,23 @@ public class HttpRequest {
         return method + " " + uri;
     }
 
+    public boolean containsParameter(String key) {
+        return parameters.containsKey(key);
+    }
+
+    public HttpRequest(String rawRequest) {
+        this.rawRequest = rawRequest;
+        this.parameters = new HashMap<>();
+        this.parse();
+    }
+
     private void parse() {
+        logger.info("Запуск парсинга HttpRequest. На вход получен raw request: {}", rawRequest);
         int startIndex = rawRequest.indexOf(' ');
         int endIndex = rawRequest.indexOf(' ', startIndex + 1);
-
+        logger.debug("startIndex: {}, endIndex: {}", startIndex, endIndex);
         this.method = HttpMethod.valueOf(rawRequest.substring(0, startIndex));
+        logger.debug("method: {}", this.method);
 
         this.uri = rawRequest.substring(startIndex + 1, endIndex);
         if (uri.contains("?")) {
@@ -52,19 +63,21 @@ public class HttpRequest {
                 parameters.put(keyValue[0], keyValue[1]);
             }
         }
+        logger.debug("uri: {}", this.uri);
 
         if (method == HttpMethod.POST) {
             this.body = rawRequest.substring(rawRequest.indexOf("\r\n\r\n"));
+            logger.debug("body: {}", this.body);
         }
     }
 
     public void info(boolean showRawRequest) {
         if (showRawRequest) {
-            System.out.println("RAW REQUEST: " + rawRequest);
+            logger.info("RAW REQUEST:\n{}", rawRequest);
         }
-        System.out.println("METHOD: " + method);
-        System.out.println("URI: " + uri);
-        System.out.println("PARAMETERS: " + parameters);
-        System.out.println("BODY: " + body);
+        logger.info("METHOD: {}", method);
+        logger.info("URI: {}", uri);
+        logger.info("PARAMETERS: {}", parameters);
+        logger.info("BODY: {}",  body);
     }
 }
