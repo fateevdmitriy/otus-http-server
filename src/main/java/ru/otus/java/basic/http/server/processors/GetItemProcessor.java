@@ -3,6 +3,7 @@ package ru.otus.java.basic.http.server.processors;
 import com.google.gson.Gson;
 import ru.otus.java.basic.http.server.HttpRequest;
 import ru.otus.java.basic.http.server.application.Item;
+import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 import ru.otus.java.basic.http.server.application.ItemsRepository;
 
 import java.io.IOException;
@@ -14,18 +15,19 @@ import org.apache.logging.log4j.Logger;
 
 public class GetItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(GetItemProcessor.class);
-    private ItemsRepository itemsRepository;
+    private ItemsDatabaseProvider itemsDbProvider;
 
-    public GetItemProcessor(ItemsRepository itemsRepository) {
-        this.itemsRepository = itemsRepository;
+    public GetItemProcessor(ItemsDatabaseProvider itemsDbProvider) {
+        this.itemsDbProvider = itemsDbProvider;
     }
 
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {}", GetItemProcessor.class.getName());
+
         if (request.getParameter("id") != null) {
             Long id = Long.parseLong(request.getParameter("id"));
-            Item item = itemsRepository.findById(id);
+            Item item = itemsDbProvider.getItemById(id);
             if (item == null) {
                 String response = "" +
                         "HTTP/1.1 404 Not Found\r\n" +
@@ -45,7 +47,8 @@ public class GetItemProcessor implements RequestProcessor {
             output.write(response.getBytes(StandardCharsets.UTF_8));
             return;
         }
-        List<Item> items = itemsRepository.getAllItems();
+
+        List<Item> items = itemsDbProvider.getAllItems();
         Gson gson = new Gson();
         String itemsResponse = gson.toJson(items);
         String response = "" +

@@ -6,6 +6,7 @@ public class Item {
     private Long id;
     private String title;
     private BigDecimal price;
+    private Integer weight;
 
     public Long getId() {
         return id;
@@ -31,12 +32,17 @@ public class Item {
         this.price = price;
     }
 
+    public Integer getWeight() {return weight;}
+
+    public void setWeight(Integer weight) {this.weight = weight;}
+
     public Item() {
     }
 
-    public Item(Long id, String title, BigDecimal price) {
+    public Item(Long id, String title, BigDecimal price, Integer weight) {
         this.id = id;
         this.title = title;
         this.price = price;
+        this.weight = weight;
     }
 }

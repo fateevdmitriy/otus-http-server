@@ -36,6 +36,7 @@ public class ClientHandler implements Runnable {
                 logger.error("Получен пустой запрос от клиента.");
                 throw new IOException("Получен пустой запрос от клиента.");
             }
+            logger.info("-> rawRequest: {}", rawRequest);
             HttpRequest request = new HttpRequest(rawRequest);
             request.info(true);
             dispatcher.execute(request, clientSocket.getOutputStream());
@@ -49,13 +50,9 @@ public class ClientHandler implements Runnable {
 
     public void disconnect() {
         try {
-            if (clientSocket.getInputStream() != null) {
-                clientSocket.getInputStream().close();
+            if (clientSocket != null) {
+                clientSocket.close();
             }
-            if (clientSocket.getOutputStream() != null) {
-                clientSocket.getOutputStream().close();
-            }
-            clientSocket.close();             
         } catch (IOException e) {
             logger.error("Возникла исключительная ситуация при завершении соединения клиента с сервером.");
             e.printStackTrace();

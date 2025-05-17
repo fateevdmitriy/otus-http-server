@@ -11,9 +11,9 @@ public class ItemsRepository {
 
     public ItemsRepository() {
         this.items = new ArrayList<>(Arrays.asList(
-                new Item(1L, "Milk", BigDecimal.valueOf(92)),
-                new Item(2L, "Bread", BigDecimal.valueOf(40)),
-                new Item(3L, "Cheese", BigDecimal.valueOf(400))
+                new Item(1L, "Milk", BigDecimal.valueOf(92), 100),
+                new Item(2L, "Bread", BigDecimal.valueOf(40), 200),
+                new Item(3L, "Cheese", BigDecimal.valueOf(400), 300)
         ));
     }
 
