@@ -1,0 +1,48 @@
+package ru.otus.java.basic.http.server.processors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.HttpRequest;
+import ru.otus.java.basic.http.server.application.Item;
+import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
+import ru.otus.java.basic.http.server.exceptions.BadRequestException;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
+public class DeleteItemProcessor implements RequestProcessor {
+    private static final Logger logger = LogManager.getLogger(DeleteItemProcessor.class);
+    private final ItemsDatabaseProvider itemsDbProvider;
+
+    public DeleteItemProcessor(ItemsDatabaseProvider itemsDbProvider) {
+        this.itemsDbProvider = itemsDbProvider;
+    }
+
+    @Override
+    public void execute(HttpRequest request, OutputStream output) throws IOException {
+        logger.info("Запущен обработчик HTTP-запросов: {} ", DeleteItemProcessor.class.getName());
+        if (request.getParameter("id") == null) {
+            throw new BadRequestException("INCORRECT_REQUEST_DATA", "В параметре запроса не указан идентификатор удаляемого продукта.");
+        }
+        Long id = Long.parseLong(request.getParameter("id"));
+        Item item = itemsDbProvider.getItemById(id);
+        if (item == null) {
+            String response = "" +
+                    "HTTP/1.1 404 Not Found\r\n" +
+                    "Content-Type: text/html\r\n" +
+                    "\r\n" +
+                    "RESOURCE NOT FOUND";
+            output.write(response.getBytes(StandardCharsets.UTF_8));
+            return;
+        }
+        int itemsDeletedCnt = itemsDbProvider.deleteItemById(id);
+        logger.info("Удалено товаров: {}", itemsDeletedCnt);
+        String response = "" +
+                "HTTP/1.1 204 No Content\r\n" +
+                "Content-Type: text/html\r\n" +
+                "\r\n";
+        output.write(response.getBytes(StandardCharsets.UTF_8));
+    }
+
+}

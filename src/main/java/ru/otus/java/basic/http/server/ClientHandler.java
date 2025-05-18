@@ -23,6 +23,7 @@ public class ClientHandler implements Runnable {
             logger.info("Новый клиент подключился к серверу.");
             byte[] buffer = new byte[BUFFER_SIZE];
             int n = clientSocket.getInputStream().read(buffer);
+            logger.info("ClientHandler read bytes from InputStream: {}", n);
             if (n == 0) {
                 logger.error("Получено пустое сообщение от клиента.");
                 throw new IOException("Получено пустое сообщение от клиента.");

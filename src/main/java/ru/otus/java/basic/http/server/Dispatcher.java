@@ -3,7 +3,6 @@ package ru.otus.java.basic.http.server;
 import com.google.gson.Gson;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProviderImpl;
-import ru.otus.java.basic.http.server.application.ItemsRepository;
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import ru.otus.java.basic.http.server.exceptions.ErrorDto;
 import ru.otus.java.basic.http.server.processors.*;
@@ -22,21 +21,20 @@ import org.apache.logging.log4j.Logger;
 public class Dispatcher {
     private static final Logger logger = LogManager.getLogger(Dispatcher.class);
     private static final String HTTP_500_ERR_MSG = "Server encountered an unexpected condition that prevented it from fulfilling the request.";
-    private final ItemsRepository itemsRepository;
     private final ItemsDatabaseProvider itemsDbProvider;
     private final Map<String, RequestProcessor> processors;
     private final RequestProcessor defaultNotFoundProcessor;
     private final RequestProcessor defaultStaticResourceProcessor;
 
     public Dispatcher() {
-        this.itemsRepository = new ItemsRepository();
         this.itemsDbProvider = new ItemsDatabaseProviderImpl();
         this.processors = new HashMap<>();
         this.processors.put("GET /hello", new HelloProcessor());
         this.processors.put("GET /calculator", new CalculatorProcessor());
         this.processors.put("GET /items", new GetItemProcessor(itemsDbProvider));
-        //
-        this.processors.put("POST /items", new CreateItemProcessor(itemsRepository));
+        this.processors.put("POST /items", new CreateItemProcessor(itemsDbProvider));
+        this.processors.put("DELETE /items", new DeleteItemProcessor(itemsDbProvider));
+        this.processors.put("PUT /items", new UpdateItemProcessor(itemsDbProvider));
         this.defaultNotFoundProcessor = new DefaultNotFoundProcessor();
         this.defaultStaticResourceProcessor = new DefaultStaticResourcesProcessor();
     }

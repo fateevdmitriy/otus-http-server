@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import ru.otus.java.basic.http.server.HttpRequest;
 import ru.otus.java.basic.http.server.application.Item;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
-import ru.otus.java.basic.http.server.application.ItemsRepository;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -15,7 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 public class GetItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(GetItemProcessor.class);
-    private ItemsDatabaseProvider itemsDbProvider;
+    private final ItemsDatabaseProvider itemsDbProvider;
 
     public GetItemProcessor(ItemsDatabaseProvider itemsDbProvider) {
         this.itemsDbProvider = itemsDbProvider;

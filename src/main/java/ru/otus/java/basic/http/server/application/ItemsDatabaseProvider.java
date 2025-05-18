@@ -8,6 +8,9 @@ public interface ItemsDatabaseProvider {
 
     public Item getItemById(Long itemId);
 
-    //public void addNewItem(Item item);
+    public int addItem(Item item);
 
+    public int deleteItemById(Long itemId);
+
+    public int updateItem(Item updatedItem);
 }

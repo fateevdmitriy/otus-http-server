@@ -65,7 +65,7 @@ public class HttpRequest {
         }
         logger.debug("uri: {}", this.uri);
 
-        if (method == HttpMethod.POST) {
+        if (method == HttpMethod.POST || method == HttpMethod.PUT) {
             this.body = rawRequest.substring(rawRequest.indexOf("\r\n\r\n"));
             logger.debug("body: {}", this.body);
         }
