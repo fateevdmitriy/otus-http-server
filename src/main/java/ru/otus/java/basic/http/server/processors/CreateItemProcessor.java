@@ -22,7 +22,7 @@ public class CreateItemProcessor implements RequestProcessor {
         this.itemsDbProvider = itemsDbProvider;
     }
 
-    //TODO Добавить возможность создания нескольких товаров
+
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", CreateItemProcessor.class.getName());

@@ -22,7 +22,6 @@ public class UpdateItemProcessor implements RequestProcessor {
         this.itemsDbProvider = itemsDbProvider;
     }
 
-    //TODO Добавить возможность обновления нескольких товаров
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", UpdateItemProcessor.class.getName());

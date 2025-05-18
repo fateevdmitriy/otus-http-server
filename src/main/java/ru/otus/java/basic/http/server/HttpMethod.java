@@ -1,14 +1,24 @@
 package ru.otus.java.basic.http.server;
 
 public enum HttpMethod {
-    GET, POST, PUT, DELETE;
+    GET("GET"),
+    POST("POST"),
+    PUT("PUT"),
+    DELETE("DELETE");
 
-    public static boolean contains(String checkNane)
-    {
-        for(HttpMethod method: values())
-            if (method.name().equals(checkNane)) {
-                return true;
-            }
-        return false;
+    private final String name;
+
+    HttpMethod(String name) {
+        this.name = name;
     }
+
+    public static HttpMethod getHttpMethodByValue(String strName) {
+        for (HttpMethod method : HttpMethod.values()) {
+            if (method.name.equalsIgnoreCase(strName)) {
+                return method;
+            }
+        }
+        return null;
+    }
+
 }

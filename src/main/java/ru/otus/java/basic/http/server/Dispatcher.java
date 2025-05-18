@@ -21,20 +21,23 @@ import org.apache.logging.log4j.Logger;
 public class Dispatcher {
     private static final Logger logger = LogManager.getLogger(Dispatcher.class);
     private static final String HTTP_500_ERR_MSG = "Server encountered an unexpected condition that prevented it from fulfilling the request.";
+    private static final String HTTP_405_ERR_MSG = "URI can't be processed as POST request, but  can be processed as GET request.";
     private final ItemsDatabaseProvider itemsDbProvider;
-    private final Map<String, RequestProcessor> processors;
+    private final Map<String, Map<String, RequestProcessor>> processors;
     private final RequestProcessor defaultNotFoundProcessor;
     private final RequestProcessor defaultStaticResourceProcessor;
 
     public Dispatcher() {
         this.itemsDbProvider = new ItemsDatabaseProviderImpl();
         this.processors = new HashMap<>();
-        this.processors.put("GET /hello", new HelloProcessor());
-        this.processors.put("GET /calculator", new CalculatorProcessor());
-        this.processors.put("GET /items", new GetItemProcessor(itemsDbProvider));
-        this.processors.put("POST /items", new CreateItemProcessor(itemsDbProvider));
-        this.processors.put("DELETE /items", new DeleteItemProcessor(itemsDbProvider));
-        this.processors.put("PUT /items", new UpdateItemProcessor(itemsDbProvider));
+        this.processors.put("/hello", Map.of("GET", new HelloProcessor()));
+        this.processors.put("/calculator", Map.of("GET", new CalculatorProcessor()));
+        this.processors.put("/items", Map.of(
+                "GET", new CalculatorProcessor(),
+                "POST", new CreateItemProcessor(itemsDbProvider),
+                "DELETE", new DeleteItemProcessor(itemsDbProvider),
+                "PUT", new UpdateItemProcessor(itemsDbProvider)
+        ));
         this.defaultNotFoundProcessor = new DefaultNotFoundProcessor();
         this.defaultStaticResourceProcessor = new DefaultStaticResourcesProcessor();
     }
@@ -45,12 +48,31 @@ public class Dispatcher {
             defaultStaticResourceProcessor.execute(request, output);
             return;
         }
-        if (!processors.containsKey(request.getRoutingKey())) {
+        if (!processors.containsKey(request.getUri())) {
             defaultNotFoundProcessor.execute(request, output);
             return;
         }
+        // TEST IT
+        Map<String, RequestProcessor> methods = processors.get(request.getUri());
+        logger.info("methods: {}", methods);
+
+        if (!methods.containsKey(request.getMethod().toString())) {
+            if (request.getMethod().equals(HttpMethod.POST) && methods.containsKey("GET")) {
+                logger.info("Response 405!");
+                String response = "" +
+                        "HTTP/1.1 405 Method Not Allowed\r\n" +
+                        "Content-Type: text/html\r\n" +
+                        "\r\n" +
+                        "<html><body><h1>" + HTTP_405_ERR_MSG + "</h1></body></html>";
+                output.write(response.getBytes(StandardCharsets.UTF_8));
+                return;
+            }
+            defaultNotFoundProcessor.execute(request, output);
+            return;
+        }
+
         try {
-            processors.get(request.getRoutingKey()).execute(request, output);
+            methods.get(request.getMethod().toString()).execute(request, output);
         } catch (BadRequestException e) {
             Gson gson = new Gson();
             ErrorDto errorDto = new ErrorDto(e.getCode(), e.getMessage());

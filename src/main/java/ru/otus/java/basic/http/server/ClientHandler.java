@@ -38,9 +38,11 @@ public class ClientHandler implements Runnable {
                 throw new IOException("Получен пустой запрос от клиента.");
             }
             logger.info("-> rawRequest: {}", rawRequest);
+
             HttpRequest request = new HttpRequest(rawRequest);
             request.info(true);
             dispatcher.execute(request, clientSocket.getOutputStream());
+
         } catch (IOException e) {
             logger.error("Возникла исключительная ситуация при выполнении соединения клиента с сервером. {}", e.getMessage());
             e.printStackTrace();
