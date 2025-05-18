@@ -33,7 +33,7 @@ public class Dispatcher {
         this.processors.put("/hello", Map.of("GET", new HelloProcessor()));
         this.processors.put("/calculator", Map.of("GET", new CalculatorProcessor()));
         this.processors.put("/items", Map.of(
-                "GET", new CalculatorProcessor(),
+                "GET", new GetItemProcessor(itemsDbProvider),
                 "POST", new CreateItemProcessor(itemsDbProvider),
                 "DELETE", new DeleteItemProcessor(itemsDbProvider),
                 "PUT", new UpdateItemProcessor(itemsDbProvider)
