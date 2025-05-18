@@ -23,16 +23,16 @@ public class Dispatcher {
     private static final String HTTP_500_ERR_MSG = "Server encountered an unexpected condition that prevented it from fulfilling the request.";
     private static final String HTTP_405_ERR_MSG = "URI can't be processed as POST request, but  can be processed as GET request.";
     private final ItemsDatabaseProvider itemsDbProvider;
-    private final Map<String, Map<String, RequestProcessor>> processors;
+    private final Map<String, Map<String, RequestProcessor>> methods;
     private final RequestProcessor defaultNotFoundProcessor;
     private final RequestProcessor defaultStaticResourceProcessor;
 
     public Dispatcher() {
         this.itemsDbProvider = new ItemsDatabaseProviderImpl();
-        this.processors = new HashMap<>();
-        this.processors.put("/hello", Map.of("GET", new HelloProcessor()));
-        this.processors.put("/calculator", Map.of("GET", new CalculatorProcessor()));
-        this.processors.put("/items", Map.of(
+        this.methods = new HashMap<>();
+        this.methods.put("/hello", Map.of("GET", new HelloProcessor()));
+        this.methods.put("/calculator", Map.of("GET", new CalculatorProcessor()));
+        this.methods.put("/items", Map.of(
                 "GET", new GetItemProcessor(itemsDbProvider),
                 "POST", new CreateItemProcessor(itemsDbProvider),
                 "DELETE", new DeleteItemProcessor(itemsDbProvider),
@@ -48,16 +48,15 @@ public class Dispatcher {
             defaultStaticResourceProcessor.execute(request, output);
             return;
         }
-        if (!processors.containsKey(request.getUri())) {
+        if (!methods.containsKey(request.getUri())) {
             defaultNotFoundProcessor.execute(request, output);
             return;
         }
-        // TEST IT
-        Map<String, RequestProcessor> methods = processors.get(request.getUri());
-        logger.info("methods: {}", methods);
+        Map<String, RequestProcessor> processors = methods.get(request.getUri());
+        logger.info("processors: {}", processors);
 
-        if (!methods.containsKey(request.getMethod().toString())) {
-            if (request.getMethod().equals(HttpMethod.POST) && methods.containsKey("GET")) {
+        if (!processors.containsKey(request.getMethod().toString())) {
+            if (request.getMethod().equals(HttpMethod.POST) && processors.containsKey("GET")) {
                 logger.info("Response 405!");
                 String response = "" +
                         "HTTP/1.1 405 Method Not Allowed\r\n" +
@@ -72,7 +71,7 @@ public class Dispatcher {
         }
 
         try {
-            methods.get(request.getMethod().toString()).execute(request, output);
+            processors.get(request.getMethod().toString()).execute(request, output);
         } catch (BadRequestException e) {
             Gson gson = new Gson();
             ErrorDto errorDto = new ErrorDto(e.getCode(), e.getMessage());
