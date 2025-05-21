@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ItemsDatabaseProviderImpl implements ItemsDatabaseProvider {
-    //private List<Item> items;
     private final Connection connection;
     private static final Logger logger = LogManager.getLogger(ItemsDatabaseProviderImpl.class);
 

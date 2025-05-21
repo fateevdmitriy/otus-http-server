@@ -43,7 +43,7 @@ public class ClientHandler implements Runnable {
             HttpRequest request = new HttpRequest(rawRequest);
             request.info(true);
             dispatcher.execute(request, clientSocket.getOutputStream());
-        // Перенести обработку исключений сюда
+
         } catch (IOException e) {
             logger.error("Возникла исключительная ситуация при выполнении соединения клиента с сервером. {}", e.getMessage());
             e.printStackTrace();

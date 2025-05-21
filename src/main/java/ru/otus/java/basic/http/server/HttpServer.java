@@ -1,5 +1,6 @@
 package ru.otus.java.basic.http.server;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +26,7 @@ public class HttpServer {
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 executorService.execute(clientHandler);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         } finally {
             executorService.shutdown();

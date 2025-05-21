@@ -20,7 +20,6 @@ public class Dispatcher {
     private final ItemsDatabaseProvider itemsDbProvider;
     private final Map<String, Map<String, RequestProcessor>> methods;
     private final RequestProcessor defaultStaticResourceProcessor;
-    //private final RequestProcessor defaultNotFoundProcessor;
 
     public Dispatcher() {
         this.itemsDbProvider = new ItemsDatabaseProviderImpl();
@@ -34,7 +33,6 @@ public class Dispatcher {
                 "PUT", new UpdateItemProcessor(itemsDbProvider)
         ));
         this.defaultStaticResourceProcessor = new DefaultStaticResourcesProcessor();
-        //this.defaultNotFoundProcessor = new DefaultNotFoundProcessor();
     }
 
     public void execute(HttpRequest request, OutputStream output) throws IOException {
@@ -44,6 +42,7 @@ public class Dispatcher {
                 defaultStaticResourceProcessor.execute(request, output);
                 return;
             }
+
             if (!methods.containsKey(request.getUri())) {
                 throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
             }
@@ -57,8 +56,8 @@ public class Dispatcher {
                 }
                 throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
             }
-
             processors.get(request.getMethod().toString()).execute(request, output);
+
         } catch (BadRequestException e) {
             new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
         } catch (NotFoundException e) {
@@ -68,6 +67,7 @@ public class Dispatcher {
         } catch (InternalServerError e) {
             new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
         } catch (Exception e) {
+            new HttpErrorProcessor("500 INTERNAL SERVER ERROR", e.getMessage()).execute(request, output);
             /*
             String response = "" +
                     "HTTP/1.1 500 Internal Server Error\r\n" +
@@ -76,7 +76,6 @@ public class Dispatcher {
                     "<html><body><h1> INTERNAL SERVER ERROR : " + e.getMessage() + "</h1></body></html>";
             output.write(response.getBytes(StandardCharsets.UTF_8));
              */
-            new HttpErrorProcessor("500 Internal Server Error", e.getMessage()).execute(request, output);
         }
     }
 }

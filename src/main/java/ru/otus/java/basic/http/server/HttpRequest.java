@@ -1,12 +1,10 @@
 package ru.otus.java.basic.http.server;
 
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.otus.java.basic.http.server.exceptions.BadRequestException;
-
 
 public class HttpRequest {
     private static final Logger logger = LogManager.getLogger(HttpRequest.class);
@@ -32,25 +30,21 @@ public class HttpRequest {
         return parameters.get(key);
     }
 
-    public String getRoutingKey() {
-        return method + " " + uri;
-    }
-
     public boolean containsParameter(String key) {
         return parameters.containsKey(key);
     }
 
-    public HttpRequest(String rawRequest) {
+    public HttpRequest(String rawRequest) throws MalformedURLException {
         this.rawRequest = rawRequest;
         this.parameters = new HashMap<>();
         this.parse();
     }
 
-    private void parse() throws BadRequestException {
+    private void parse() throws MalformedURLException {
         logger.info("Запуск парсинга HttpRequest. На вход получен raw request: {}", rawRequest);
+
         int startIndex = rawRequest.indexOf(' ');
         int endIndex = rawRequest.indexOf(' ', startIndex + 1);
-        logger.debug("startIndex: {}, endIndex: {}", startIndex, endIndex);
         this.method = HttpMethod.valueOf(rawRequest.substring(0, startIndex));
         logger.debug("method: {}", this.method);
 
@@ -62,7 +56,7 @@ public class HttpRequest {
             for (String param : rawParams) {
                 String[] keyValue = param.split("=");
                 if (keyValue.length != 2) {
-                    throw new BadRequestException("400 BAD REQUEST", "Некорректно задан параметр запроса.");
+                    throw new MalformedURLException("Некорректно задан параметр запроса.");
                 }
                 parameters.put(keyValue[0], keyValue[1]);
             }
