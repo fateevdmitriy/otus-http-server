@@ -21,6 +21,7 @@ public class ClientHandler implements Runnable {
     public void run() {
         try {
             logger.info("Новый клиент подключился к серверу.");
+
             byte[] buffer = new byte[BUFFER_SIZE];
             int n = clientSocket.getInputStream().read(buffer);
             logger.info("ClientHandler read bytes from InputStream: {}", n);
@@ -42,7 +43,7 @@ public class ClientHandler implements Runnable {
             HttpRequest request = new HttpRequest(rawRequest);
             request.info(true);
             dispatcher.execute(request, clientSocket.getOutputStream());
-
+        // Перенести обработку исключений сюда
         } catch (IOException e) {
             logger.error("Возникла исключительная ситуация при выполнении соединения клиента с сервером. {}", e.getMessage());
             e.printStackTrace();

@@ -32,10 +32,10 @@ public class CreateItemProcessor implements RequestProcessor {
         logger.info("Цена нового продукта: {}", newItem.getPrice());
         logger.info("Вес нового продукта: {}", newItem.getWeight());
         if (newItem.getTitle() == null || newItem.getTitle().isEmpty()) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "В параметре запроса название продукта не может быть пустым.");
+            throw new BadRequestException("400 BAD REQUEST", "В параметре запроса название продукта не может быть пустым.");
         }
         if (newItem.getPrice() != null && newItem.getPrice().compareTo(BigDecimal.ZERO) < 0) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "В параметре запроса цена продукта не может быть отрицательной.");
+            throw new BadRequestException("400 BAD REQUEST", "В параметре запроса цена продукта не может быть отрицательной.");
         }
         int itemsAddedCnt = itemsDbProvider.addItem(newItem);
         logger.info("Добавлено товаров: {}",itemsAddedCnt);

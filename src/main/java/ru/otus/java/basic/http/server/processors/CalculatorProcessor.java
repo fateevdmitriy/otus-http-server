@@ -16,22 +16,22 @@ public class CalculatorProcessor implements RequestProcessor {
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", CalculatorProcessor.class.getName());
         if (!request.containsParameter("a")) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Отсутствует параметр запроса 'a'");
+            throw new BadRequestException("400 BAD REQUEST", "Отсутствует параметр запроса 'a'");
         }
         if (!request.containsParameter("b")) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Отсутствует параметр запроса 'b'");
+            throw new BadRequestException("400 BAD REQUEST", "Отсутствует параметр запроса 'b'");
         }
         int a;
         try {
             a = Integer.parseInt(request.getParameter("a"));    
         } catch (NumberFormatException e) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Параметр запроса а не является целым числом");    
+            throw new BadRequestException("400 BAD REQUEST", "Параметр запроса а не является целым числом");
         }
         int b;
         try {
             b = Integer.parseInt(request.getParameter("b"));
         } catch (NumberFormatException e) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Параметр запроса b не является целым числом");
+            throw new BadRequestException("400 BAD REQUEST", "Параметр запроса b не является целым числом");
         }
         String response = "" +
                 "HTTP/1.1 200 OK\r\n" +

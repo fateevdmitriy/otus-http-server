@@ -33,13 +33,13 @@ public class UpdateItemProcessor implements RequestProcessor {
         logger.info("Цена обновляемого продукта: {}", updItem.getPrice());
         logger.info("Вес обновляемого продукта: {}", updItem.getWeight());
         if (updItem.getId() == null) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "В параметре запроса идентификатор продукта не может быть пустым.");
+            throw new BadRequestException("400 BAD REQUEST", "В параметре запроса идентификатор продукта не может быть пустым.");
         }
         if (updItem.getTitle() == null || updItem.getTitle().isEmpty()) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "В параметре запроса название продукта не может быть пустым.");
+            throw new BadRequestException("400 BAD REQUEST", "В параметре запроса название продукта не может быть пустым.");
         }
         if (updItem.getPrice() != null && updItem.getPrice().compareTo(BigDecimal.ZERO) < 0) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "В параметре запроса цена продукта не может быть отрицательной.");
+            throw new BadRequestException("400 BAD REQUEST", "В параметре запроса цена продукта не может быть отрицательной.");
         }
         if (itemsDbProvider.getItemById(updItem.getId()) == null) {
             String response = "" +

@@ -23,7 +23,7 @@ public class DeleteItemProcessor implements RequestProcessor {
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", DeleteItemProcessor.class.getName());
         if (request.getParameter("id") == null) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "В параметре запроса не указан идентификатор удаляемого продукта.");
+            throw new BadRequestException("400 BAD REQUEST", "В параметре запроса не указан идентификатор удаляемого продукта.");
         }
         Long id = Long.parseLong(request.getParameter("id"));
         Item item = itemsDbProvider.getItemById(id);

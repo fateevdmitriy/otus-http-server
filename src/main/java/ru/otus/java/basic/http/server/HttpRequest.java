@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 
 
 public class HttpRequest {
@@ -45,7 +46,7 @@ public class HttpRequest {
         this.parse();
     }
 
-    private void parse() {
+    private void parse() throws BadRequestException {
         logger.info("Запуск парсинга HttpRequest. На вход получен raw request: {}", rawRequest);
         int startIndex = rawRequest.indexOf(' ');
         int endIndex = rawRequest.indexOf(' ', startIndex + 1);
@@ -60,6 +61,9 @@ public class HttpRequest {
             String[] rawParams = elements[1].split("[&]");
             for (String param : rawParams) {
                 String[] keyValue = param.split("=");
+                if (keyValue.length != 2) {
+                    throw new BadRequestException("400 BAD REQUEST", "Некорректно задан параметр запроса.");
+                }
                 parameters.put(keyValue[0], keyValue[1]);
             }
         }

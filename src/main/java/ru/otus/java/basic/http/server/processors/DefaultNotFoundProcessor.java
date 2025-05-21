@@ -3,6 +3,8 @@ package ru.otus.java.basic.http.server.processors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.otus.java.basic.http.server.HttpRequest;
+import ru.otus.java.basic.http.server.exceptions.BadRequestException;
+import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -14,11 +16,14 @@ public class DefaultNotFoundProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", DefaultNotFoundProcessor.class.getName());
+        throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
+        /*
         String response = "" +
                 "HTTP/1.1 404 Not Found\r\n" +
                 "Content-Type: text/html\r\n" +
                 "\r\n" +
                 "<html><body><h1>PAGE NOT FOUND</h1></body></html>";
         output.write(response.getBytes(StandardCharsets.UTF_8));
+         */
     }
 }

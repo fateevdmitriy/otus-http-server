@@ -1,15 +1,12 @@
 package ru.otus.java.basic.http.server;
 
-import com.google.gson.Gson;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProviderImpl;
-import ru.otus.java.basic.http.server.exceptions.BadRequestException;
-import ru.otus.java.basic.http.server.exceptions.ErrorDto;
+import ru.otus.java.basic.http.server.exceptions.*;
 import ru.otus.java.basic.http.server.processors.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -20,12 +17,10 @@ import org.apache.logging.log4j.Logger;
 
 public class Dispatcher {
     private static final Logger logger = LogManager.getLogger(Dispatcher.class);
-    private static final String HTTP_500_ERR_MSG = "Server encountered an unexpected condition that prevented it from fulfilling the request.";
-    private static final String HTTP_405_ERR_MSG = "URI can't be processed as POST request, but  can be processed as GET request.";
     private final ItemsDatabaseProvider itemsDbProvider;
     private final Map<String, Map<String, RequestProcessor>> methods;
-    private final RequestProcessor defaultNotFoundProcessor;
     private final RequestProcessor defaultStaticResourceProcessor;
+    //private final RequestProcessor defaultNotFoundProcessor;
 
     public Dispatcher() {
         this.itemsDbProvider = new ItemsDatabaseProviderImpl();
@@ -38,56 +33,50 @@ public class Dispatcher {
                 "DELETE", new DeleteItemProcessor(itemsDbProvider),
                 "PUT", new UpdateItemProcessor(itemsDbProvider)
         ));
-        this.defaultNotFoundProcessor = new DefaultNotFoundProcessor();
         this.defaultStaticResourceProcessor = new DefaultStaticResourcesProcessor();
+        //this.defaultNotFoundProcessor = new DefaultNotFoundProcessor();
     }
 
     public void execute(HttpRequest request, OutputStream output) throws IOException {
-        logger.info("Запуск диспетчера запросов.");
-        if (Files.exists(Paths.get("static/", request.getUri().substring(1)))) {
-            defaultStaticResourceProcessor.execute(request, output);
-            return;
-        }
-        if (!methods.containsKey(request.getUri())) {
-            defaultNotFoundProcessor.execute(request, output);
-            return;
-        }
-        Map<String, RequestProcessor> processors = methods.get(request.getUri());
-        logger.info("processors: {}", processors);
-
-        if (!processors.containsKey(request.getMethod().toString())) {
-            if (request.getMethod().equals(HttpMethod.POST) && processors.containsKey("GET")) {
-                logger.info("Response 405!");
-                String response = "" +
-                        "HTTP/1.1 405 Method Not Allowed\r\n" +
-                        "Content-Type: text/html\r\n" +
-                        "\r\n" +
-                        "<html><body><h1>" + HTTP_405_ERR_MSG + "</h1></body></html>";
-                output.write(response.getBytes(StandardCharsets.UTF_8));
+        try {
+            logger.info("Запуск диспетчера запросов.");
+            if (Files.exists(Paths.get("static/", request.getUri().substring(1)))) {
+                defaultStaticResourceProcessor.execute(request, output);
                 return;
             }
-            defaultNotFoundProcessor.execute(request, output);
-            return;
-        }
+            if (!methods.containsKey(request.getUri())) {
+                throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
+            }
 
-        try {
+            Map<String, RequestProcessor> processors = methods.get(request.getUri());
+            logger.info("processors: {}", processors);
+
+            if (!processors.containsKey(request.getMethod().toString())) {
+                if (request.getMethod().equals(HttpMethod.POST) && processors.containsKey("GET")) {
+                    throw new MethodNotAllowed("405 METHOD NOT ALLOWED", "В запросе указан недопустимый HTTP-метод для запрошенного URI.");
+                }
+                throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
+            }
+
             processors.get(request.getMethod().toString()).execute(request, output);
         } catch (BadRequestException e) {
-            Gson gson = new Gson();
-            ErrorDto errorDto = new ErrorDto(e.getCode(), e.getMessage());
-            String errorDtoJson = gson.toJson(errorDto);
-            String response = "" +
-                    "HTTP/1.1 400 Bad Request\r\n" +
-                    "Content-Type: application/json\r\n" +
-                    "\r\n" + errorDtoJson;
-            output.write(response.getBytes(StandardCharsets.UTF_8));
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
+        } catch (NotFoundException e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
+        } catch (MethodNotAllowed e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
+        } catch (InternalServerError e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
         } catch (Exception e) {
+            /*
             String response = "" +
                     "HTTP/1.1 500 Internal Server Error\r\n" +
                     "Content-Type: text/html\r\n" +
                     "\r\n" +
-                    "<html><body><h1>" + HTTP_500_ERR_MSG + "</h1></body></html>";
+                    "<html><body><h1> INTERNAL SERVER ERROR : " + e.getMessage() + "</h1></body></html>";
             output.write(response.getBytes(StandardCharsets.UTF_8));
+             */
+            new HttpErrorProcessor("500 Internal Server Error", e.getMessage()).execute(request, output);
         }
     }
 }
