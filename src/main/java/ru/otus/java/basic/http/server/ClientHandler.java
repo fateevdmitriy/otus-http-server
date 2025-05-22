@@ -7,7 +7,7 @@ import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
-    private static final int BUFFER_SIZE = 8192;  
+    private static final int BUFFER_SIZE = 256;
     private final Socket clientSocket;
     private final Dispatcher dispatcher;
     private static final Logger logger = LogManager.getLogger(ClientHandler.class);
@@ -19,31 +19,32 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
+        logger.info("Новый клиент подключился к серверу.");
+        StringBuilder stringBuilder = new StringBuilder();
         try {
-            logger.info("Новый клиент подключился к серверу.");
-
-            byte[] buffer = new byte[BUFFER_SIZE];
-            int n = clientSocket.getInputStream().read(buffer);
-            logger.info("ClientHandler read bytes from InputStream: {}", n);
-            if (n == 0) {
-                logger.error("Получено пустое сообщение от клиента.");
-                throw new IOException("Получено пустое сообщение от клиента.");
+            InputStream inputStream = clientSocket.getInputStream();
+            if (inputStream != null) {
+                BufferedInputStream bufInStream = new BufferedInputStream(inputStream);
+                byte[] buffer = new byte[BUFFER_SIZE];
+                int bytesRead = -1;
+                while ((bytesRead = bufInStream.read(buffer)) != -1) {
+                    logger.info("bytesRead: {}", bytesRead);
+                    if (bytesRead > 0) {
+                        stringBuilder.append(new String(buffer, 0, bytesRead));
+                    }
+                    if (bytesRead < BUFFER_SIZE) {
+                        break;
+                    }
+                }
             }
-            if (n < 0) {
-                logger.error("Получено битое сообщение от клиента.");
-                throw new IOException("Получено битое сообщение от клиента.");
-            } 
-            String rawRequest = new String(buffer, 0, n);
+            String rawRequest = stringBuilder.toString();
+            logger.info("-> rawRequest:{}{}", System.lineSeparator(), rawRequest);
             if (rawRequest.isEmpty()) {
-                logger.error("Получен пустой запрос от клиента.");
                 throw new IOException("Получен пустой запрос от клиента.");
             }
-            logger.info("-> rawRequest: {}", rawRequest);
-
             HttpRequest request = new HttpRequest(rawRequest);
             request.info(true);
             dispatcher.execute(request, clientSocket.getOutputStream());
-
         } catch (IOException e) {
             logger.error("Возникла исключительная ситуация при выполнении соединения клиента с сервером. {}", e.getMessage());
             e.printStackTrace();

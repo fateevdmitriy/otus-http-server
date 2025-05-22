@@ -41,7 +41,7 @@ public class HttpRequest {
     }
 
     private void parse() throws MalformedURLException {
-        logger.info("Запуск парсинга HttpRequest. На вход получен raw request: {}", rawRequest);
+        logger.info("Запуск парсинга HttpRequest. На вход получен raw request:{}{}", System.lineSeparator(), rawRequest);
 
         int startIndex = rawRequest.indexOf(' ');
         int endIndex = rawRequest.indexOf(' ', startIndex + 1);
