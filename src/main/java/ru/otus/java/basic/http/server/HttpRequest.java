@@ -8,8 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class HttpRequest {
-    //public static final int REQUEST_SIZE_LIMIT = 1024000;
-    public static final int REQUEST_SIZE_LIMIT = 10;
+    public static final int REQUEST_SIZE_LIMIT = 102400;
     private static final Logger logger = LogManager.getLogger(HttpRequest.class);
     private final String rawRequest;
     private HttpMethod method;
@@ -73,8 +72,7 @@ public class HttpRequest {
     }
 
     public int contentLength() {
-        if (this.body == null || this.body.isEmpty()) return 0;
-        return this.body.getBytes(StandardCharsets.UTF_8).length;
+        return rawRequest.getBytes(StandardCharsets.UTF_8).length;
     }
 
     public boolean isSizeLimitExceeded() {

@@ -41,7 +41,6 @@ public class DefaultStaticResourcesProcessor implements RequestProcessor {
 
         String response = "HTTP/1.1 200 OK\r\n" +
                 contentType + "\r\n" +
-                "Content-Length: " + fileData.length + "\r\n" +
                 contentDisposition + "\r\n";
         output.write(response.getBytes());
         output.write(fileData);
