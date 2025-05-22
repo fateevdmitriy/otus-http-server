@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 public class GetItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(GetItemProcessor.class);
@@ -28,20 +30,15 @@ public class GetItemProcessor implements RequestProcessor {
             Long id = Long.parseLong(request.getParameter("id"));
             Item item = itemsDbProvider.getItemById(id);
             if (item == null) {
-                String response = "" +
-                        "HTTP/1.1 404 Not Found\r\n" +
-                        "Content-Type: text/html\r\n" +
-                        "\r\n" +
-                        "RESOURCE NOT FOUND";
-                output.write(response.getBytes(StandardCharsets.UTF_8));
-                return;
+                throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
             }
             Gson gson = new Gson();
             String itemResponse = gson.toJson(item);
+
             String response = "" +
                     "HTTP/1.1 200 OK\r\n" +
                     "Content-Type: application/json\r\n" +
-                    "\r\n" +
+                    "Content-Length: " + itemResponse.getBytes(StandardCharsets.UTF_8).length + "\r\n" +
                     itemResponse;
             output.write(response.getBytes(StandardCharsets.UTF_8));
             return;

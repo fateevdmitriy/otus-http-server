@@ -42,11 +42,16 @@ public class ClientHandler implements Runnable {
             if (rawRequest.isEmpty()) {
                 throw new IOException("Получен пустой запрос от клиента.");
             }
+
             HttpRequest request = new HttpRequest(rawRequest);
             request.info(true);
+            if (request.isSizeLimitExceeded()) {
+                throw new IOException("Размер клиентского запроса в " +request.contentLength() + " байт превышает установленный лимит в " + HttpRequest.REQUEST_SIZE_LIMIT + " байт.");
+            }
             dispatcher.execute(request, clientSocket.getOutputStream());
+
         } catch (IOException e) {
-            logger.error("Возникла исключительная ситуация при выполнении соединения клиента с сервером. {}", e.getMessage());
+            logger.error("Возникло исключение при соединении клиента с сервером. {}", e.getMessage());
             e.printStackTrace();
         } finally {
             disconnect();
@@ -59,7 +64,7 @@ public class ClientHandler implements Runnable {
                 clientSocket.close();
             }
         } catch (IOException e) {
-            logger.error("Возникла исключительная ситуация при завершении соединения клиента с сервером.");
+            logger.error("Возникло исключение при завершении соединения клиента с сервером.");
             e.printStackTrace();
         }
     }

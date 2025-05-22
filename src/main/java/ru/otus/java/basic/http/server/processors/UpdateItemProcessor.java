@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 public class UpdateItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(UpdateItemProcessor.class);
@@ -32,6 +33,7 @@ public class UpdateItemProcessor implements RequestProcessor {
         logger.info("Название обновляемого продукта: {}", updItem.getTitle());
         logger.info("Цена обновляемого продукта: {}", updItem.getPrice());
         logger.info("Вес обновляемого продукта: {}", updItem.getWeight());
+
         if (updItem.getId() == null) {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса идентификатор продукта не может быть пустым.");
         }
@@ -42,13 +44,7 @@ public class UpdateItemProcessor implements RequestProcessor {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса цена продукта не может быть отрицательной.");
         }
         if (itemsDbProvider.getItemById(updItem.getId()) == null) {
-            String response = "" +
-                    "HTTP/1.1 404 Not Found\r\n" +
-                    "Content-Type: text/html\r\n" +
-                    "\r\n" +
-                    "RESOURCE NOT FOUND";
-            output.write(response.getBytes(StandardCharsets.UTF_8));
-            return;
+            throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
         }
         int itemsUpdatedCnt = itemsDbProvider.updateItem(updItem);
         logger.info("Обновлено товаров: {}", itemsUpdatedCnt);
@@ -60,6 +56,3 @@ public class UpdateItemProcessor implements RequestProcessor {
     }
 
 }
-
-
-

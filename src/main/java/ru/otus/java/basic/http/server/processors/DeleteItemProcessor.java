@@ -6,6 +6,7 @@ import ru.otus.java.basic.http.server.HttpRequest;
 import ru.otus.java.basic.http.server.application.Item;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
+import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -28,13 +29,7 @@ public class DeleteItemProcessor implements RequestProcessor {
         Long id = Long.parseLong(request.getParameter("id"));
         Item item = itemsDbProvider.getItemById(id);
         if (item == null) {
-            String response = "" +
-                    "HTTP/1.1 404 Not Found\r\n" +
-                    "Content-Type: text/html\r\n" +
-                    "\r\n" +
-                    "RESOURCE NOT FOUND";
-            output.write(response.getBytes(StandardCharsets.UTF_8));
-            return;
+            throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
         }
         int itemsDeletedCnt = itemsDbProvider.deleteItemById(id);
         logger.info("Удалено товаров: {}", itemsDeletedCnt);
