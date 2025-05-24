@@ -2,13 +2,14 @@ package ru.otus.java.basic.http.server.processors;
 
 import com.google.gson.Gson;
 import ru.otus.java.basic.http.server.HttpRequest;
+import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.application.Item;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
@@ -28,12 +29,7 @@ public class UpdateItemProcessor implements RequestProcessor {
         logger.info("Запущен обработчик HTTP-запросов: {} ", UpdateItemProcessor.class.getName());
         Gson gson = new Gson();
         Item updItem = gson.fromJson(request.getBody(), Item.class);
-
-        logger.info("Идентификатор обновляемого продукта: {}", updItem.getId());
-        logger.info("Название обновляемого продукта: {}", updItem.getTitle());
-        logger.info("Цена обновляемого продукта: {}", updItem.getPrice());
-        logger.info("Вес обновляемого продукта: {}", updItem.getWeight());
-
+        updItem.info();
         if (updItem.getId() == null) {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса идентификатор продукта не может быть пустым.");
         }
@@ -48,11 +44,11 @@ public class UpdateItemProcessor implements RequestProcessor {
         }
         int itemsUpdatedCnt = itemsDbProvider.updateItem(updItem);
         logger.info("Обновлено товаров: {}", itemsUpdatedCnt);
-        String response = "" +
-                "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: text/html\r\n" +
-                "\r\n";
-        output.write(response.getBytes(StandardCharsets.UTF_8));
+        List<String> responseHeaders = List.of("Content-Type: text/html");
+        HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders);
+        response.info();
+        response.checkLength();
+        output.write(response.getBytes());
     }
 
 }

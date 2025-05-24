@@ -7,9 +7,11 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.HttpResponse;
 
 public class DefaultStaticResourcesProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(DefaultStaticResourcesProcessor.class);
@@ -27,23 +29,23 @@ public class DefaultStaticResourcesProcessor implements RequestProcessor {
         String contentType;
         switch (fileType) {
             case "txt":
-                contentDisposition = "Content-Disposition: inline\r\n";
+                contentDisposition = "Content-Disposition: inline";
                 contentType = "Content-Type: text/plain";
                 break;
             case "html":
-                contentDisposition = "Content-Disposition: inline\r\n";
-                contentType = "Content-Type: text/html\r\n";
+                contentDisposition = "Content-Disposition: inline";
+                contentType = "Content-Type: text/html";
                 break;
             default:
-                contentDisposition = "Content-Disposition: attachment; filename=" + filename + "\r\n";;
-                contentType = "Content-Type: application/octet-stream\r\n";
+                contentDisposition = "Content-Disposition: attachment; filename=" + filename;
+                contentType = "Content-Type: application/octet-stream";
         }
-
-        String response = "HTTP/1.1 200 OK\r\n" +
-                contentType + "\r\n" +
-                contentDisposition + "\r\n";
+        List<String> responseHeaders = List.of(contentDisposition, contentType);
+        HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, fileData);
+        response.info();
+        response.checkLength();
         output.write(response.getBytes());
-        output.write(fileData);
+
     }
 }
 

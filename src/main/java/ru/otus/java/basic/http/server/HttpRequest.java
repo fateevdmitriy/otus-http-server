@@ -1,5 +1,6 @@
 package ru.otus.java.basic.http.server;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -71,15 +72,22 @@ public class HttpRequest {
         }
     }
 
-    public int contentLength() {
-        return rawRequest.getBytes(StandardCharsets.UTF_8).length;
+    public int contentLength() throws IOException {
+        byte[] bytes = rawRequest.getBytes(StandardCharsets.UTF_8);
+        if (bytes == null) {
+            throw new IOException("Запрос клиента не может быть пустым.");
+        }
+        return bytes.length;
     }
 
-    public boolean isSizeLimitExceeded() {
-        return this.contentLength() > REQUEST_SIZE_LIMIT;
+    public void checkLength() throws IOException {
+        if (this.contentLength() > REQUEST_SIZE_LIMIT) {
+            throw new IOException("Размер запроса клиента в " + this.contentLength() + " байт превышает установленный лимит в " + REQUEST_SIZE_LIMIT + " байт.");
+        }
     }
 
-    public void info(boolean showRawRequest) {
+    public void info(boolean showRawRequest) throws IOException {
+        logger.info("{}HTTP Request Info:", System.lineSeparator());
         if (showRawRequest) {
             logger.info("RAW REQUEST:\n{}", rawRequest);
         }
@@ -88,5 +96,6 @@ public class HttpRequest {
         logger.info("PARAMETERS: {}", parameters);
         logger.info("BODY: {}",  body);
         logger.info("SIZE: {}", contentLength());
+        logger.info("SIZE_LIMIT: {}", REQUEST_SIZE_LIMIT);
     }
 }

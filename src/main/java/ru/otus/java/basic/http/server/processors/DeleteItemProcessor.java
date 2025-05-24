@@ -3,6 +3,7 @@ package ru.otus.java.basic.http.server.processors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.otus.java.basic.http.server.HttpRequest;
+import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.application.Item;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
@@ -10,7 +11,7 @@ import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 public class DeleteItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(DeleteItemProcessor.class);
@@ -33,11 +34,11 @@ public class DeleteItemProcessor implements RequestProcessor {
         }
         int itemsDeletedCnt = itemsDbProvider.deleteItemById(id);
         logger.info("Удалено товаров: {}", itemsDeletedCnt);
-        String response = "" +
-                "HTTP/1.1 204 No Content\r\n" +
-                "Content-Type: text/html\r\n" +
-                "\r\n";
-        output.write(response.getBytes(StandardCharsets.UTF_8));
+        List<String> responseHeaders = List.of("Content-Type: text/html");
+        HttpResponse response = new HttpResponse("HTTP/1.1", "204", "No Content", responseHeaders);
+        response.info();
+        response.checkLength();
+        output.write(response.getBytes());
     }
 
 }

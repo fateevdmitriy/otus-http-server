@@ -10,46 +10,15 @@ import java.util.List;
 
 public class HttpResponse {
     private static final Logger logger = LogManager.getLogger(HttpResponse.class);
+    public static final int RESPONSE_SIZE_LIMIT = 102400;
 
-    private HttpRequest request;
     private String protocol;
     private String statusCode;
     private String statusText;
     private List<String> headers;
     private String textBody;
     private byte[] fileBody;
-
-    public void setRequest(HttpRequest request) {
-        this.request = request;
-    }
-
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
-
-    public void setStatusCode(String statusCode) {
-        this.statusCode = statusCode;
-    }
-
-    public void setStatusText(String statusText) {
-        this.statusText = statusText;
-    }
-
-    public void setHeaders(List<String> headers) {
-        this.headers = headers;
-    }
-
-    public void setTextBody(String textBody) {
-        this.textBody = textBody;
-    }
-
-    public void setFileBody(byte[] fileBody) {
-        this.fileBody = fileBody;
-    }
-
-    public HttpRequest getRequest() {
-        return request;
-    }
+    private byte[] bytes;
 
     public String getProtocol() {
         return protocol;
@@ -63,63 +32,110 @@ public class HttpResponse {
         return statusText;
     }
 
-    public List<String> getHeaders() {
-        return headers;
+    public byte[] getBytes() {
+        return bytes;
     }
 
-    public String getTextBody() {
-        return textBody;
-    }
-
-    public byte[] getFileBody() {
-        return fileBody;
-    }
-
-    public HttpResponse(HttpRequest request, String protocol, String statusCode, String statusText, List<String> headers) {
-        this.request = request;
+    public HttpResponse(String protocol,
+                        String statusCode,
+                        String statusText,
+                        List<String> headers
+                        ) {
         this.protocol = protocol;
         this.statusCode = statusCode;
         this.statusText = statusText;
         this.headers = headers;
+        this.bytes = this.compose();
+    }
+
+    public HttpResponse(String protocol,
+                        String statusCode,
+                        String statusText,
+                        List<String> headers,
+                        String textBody
+                        ) {
+        this.protocol = protocol;
+        this.statusCode = statusCode;
+        this.statusText = statusText;
+        this.headers = headers;
+        this.textBody = textBody;
+        this.bytes = this.compose();
+    }
+
+    public HttpResponse(String protocol,
+                        String statusCode,
+                        String statusText,
+                        List<String> headers,
+                        byte[] fileBody
+                        ) {
+        this.protocol = protocol;
+        this.statusCode = statusCode;
+        this.statusText = statusText;
+        this.headers = headers;
+        this.fileBody = fileBody;
+        this.bytes = this.compose();
     }
 
     public byte[] compose() {
-        byte[] result = new byte[0];
         StringBuilder responseBuilder = new StringBuilder();
         responseBuilder.append(this.getProtocol())
                         .append(" ")
                         .append(this.getStatusCode())
                         .append(" ")
                         .append(this.getStatusText())
-                        .append("\r\n");
-                        //.append(System.lineSeparator())
-
+                        .append(System.lineSeparator());
         if (!headers.isEmpty()) {
             for (String header : headers) {
-                responseBuilder.append(header).append("\r\n");
+                responseBuilder.append(header)
+                               .append(System.lineSeparator());
             }
         }
+        responseBuilder.append(System.lineSeparator());
 
-        if (!textBody.isEmpty()) {
-            responseBuilder.append("\r\n").append(textBody);
-            logger.debug("Response with textBody:{}{}", System.lineSeparator(), responseBuilder);
+        byte[] result = new byte[0];
+        if (textBody != null && !textBody.isEmpty()) {
+            responseBuilder.append(textBody);
+            logger.info("Response with textBody:{}{}", System.lineSeparator(), responseBuilder);
             result = responseBuilder.toString().getBytes(StandardCharsets.UTF_8);
-        } else if (fileBody.length > 0) {
+        } else if (fileBody !=null && fileBody.length > 0) {
             try {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 baos.write(responseBuilder.toString().getBytes(StandardCharsets.UTF_8));
                 baos.write(fileBody);
-                logger.debug("Response with fileBody:{}{}", System.lineSeparator(), baos.toString(StandardCharsets.UTF_8));
+                logger.info("Response with fileBody:{}{}", System.lineSeparator(), baos.toString(StandardCharsets.UTF_8));
                 result = baos.toByteArray();
             } catch (IOException e) {
-                logger.error("Возникло исключение при формировании отклика сервером. {}", e.getMessage());
+                logger.info("Возникло исключение при формировании отклика сервером. {}", e.getMessage());
                 e.printStackTrace();
             }
         } else {
-            logger.debug("Response w/o body:{}{}", System.lineSeparator(), responseBuilder);
+            logger.info("Response without body:{}{}", System.lineSeparator(), responseBuilder);
             result = responseBuilder.toString().getBytes(StandardCharsets.UTF_8);
         }
         return result;
     }
 
+    public int contentLength() throws IOException {
+        if (this.getBytes() == null) {
+            throw new IOException("Ответ сервера не может быть пустым.");
+        }
+        return this.getBytes().length;
+    }
+
+    public void checkLength() throws IOException {
+        if (this.contentLength() > RESPONSE_SIZE_LIMIT) {
+            throw new IOException("Размер ответа сервера в " + this.contentLength() + " байт превышает установленный лимит в " + HttpResponse.RESPONSE_SIZE_LIMIT + " байт.");
+        }
+    }
+    public void info() throws IOException {
+        logger.info("{}HTTP Response Info:", System.lineSeparator());
+        logger.info("PROTOCOL: {}", protocol);
+        logger.info("STATUS CODE: {}", statusCode);
+        logger.info("STATUS TEXT: {}", statusText);
+        logger.info("HEADERS: {}",  headers);
+        logger.info("TEXT BODY: {}",  textBody);
+        logger.info("FILE BODY: {}",  fileBody);
+        logger.info("SIZE: {}", contentLength());
+        logger.info("SIZE_LIMIT: {}", RESPONSE_SIZE_LIMIT);
+    }
 }

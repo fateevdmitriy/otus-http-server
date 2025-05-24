@@ -2,12 +2,12 @@ package ru.otus.java.basic.http.server.processors;
 
 import com.google.gson.Gson;
 import ru.otus.java.basic.http.server.HttpRequest;
+import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.application.Item;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,24 +34,21 @@ public class GetItemProcessor implements RequestProcessor {
             }
             Gson gson = new Gson();
             String itemResponse = gson.toJson(item);
-
-            String response = "" +
-                    "HTTP/1.1 200 OK\r\n" +
-                    "Content-Type: application/json\r\n" +
-                    "Content-Length: " + itemResponse.getBytes(StandardCharsets.UTF_8).length + "\r\n" +
-                    itemResponse;
-            output.write(response.getBytes(StandardCharsets.UTF_8));
+            List<String> responseHeaders = List.of("Content-Type: application/json");
+            HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, itemResponse);
+            response.info();
+            response.checkLength();
+            output.write(response.getBytes());
             return;
         }
 
         List<Item> items = itemsDbProvider.getAllItems();
         Gson gson = new Gson();
         String itemsResponse = gson.toJson(items);
-        String response = "" +
-                "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: application/json\r\n" +
-                "\r\n" +
-                itemsResponse;
-        output.write(response.getBytes(StandardCharsets.UTF_8));
+        List<String> responseHeaders = List.of("Content-Type: application/json");
+        HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, itemsResponse);
+        response.info();
+        response.checkLength();
+        output.write(response.getBytes());
     }
 }

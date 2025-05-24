@@ -56,6 +56,7 @@ public class Dispatcher {
                 }
                 throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
             }
+
             processors.get(request.getMethod().toString()).execute(request, output);
 
         } catch (BadRequestException e) {
@@ -63,8 +64,6 @@ public class Dispatcher {
         } catch (NotFoundException e) {
             new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
         } catch (MethodNotAllowed e) {
-            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
-        } catch (InternalServerError e) {
             new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
         } catch (Exception e) {
             new HttpErrorProcessor("500 INTERNAL SERVER ERROR", e.getMessage()).execute(request, output);

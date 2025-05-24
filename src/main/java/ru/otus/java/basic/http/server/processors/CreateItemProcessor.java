@@ -2,13 +2,14 @@ package ru.otus.java.basic.http.server.processors;
 
 import com.google.gson.Gson;
 import ru.otus.java.basic.http.server.HttpRequest;
+import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.application.Item;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
@@ -38,10 +39,10 @@ public class CreateItemProcessor implements RequestProcessor {
         }
         int itemsAddedCnt = itemsDbProvider.addItem(newItem);
         logger.info("Добавлено товаров: {}",itemsAddedCnt);
-        String response = "" +
-                "HTTP/1.1 201 Created\r\n" +
-                "Content-Type: text/html\r\n" +
-                "\r\n";
-        output.write(response.getBytes(StandardCharsets.UTF_8));
+        List<String> responseHeaders = List.of("Content-Type: text/html");
+        HttpResponse response = new HttpResponse("HTTP/1.1", "201", "Created", responseHeaders);
+        response.info();
+        response.checkLength();
+        output.write(response.getBytes());
     }
 }

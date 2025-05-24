@@ -4,14 +4,16 @@ import ru.otus.java.basic.http.server.HttpRequest;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class CalculatorProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(CalculatorProcessor.class);
-    
+
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", CalculatorProcessor.class.getName());
@@ -33,11 +35,11 @@ public class CalculatorProcessor implements RequestProcessor {
         } catch (NumberFormatException e) {
             throw new BadRequestException("400 BAD REQUEST", "Параметр запроса b не является целым числом");
         }
-        String response = "" +
-                "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: text/html\r\n" +
-                "\r\n" +
-                "<html><body><h1>" + a + " + " + b + " = " + (a + b) + "</h1></body></html>";
-        output.write(response.getBytes(StandardCharsets.UTF_8));
+        final String HTML_BODY_CALC = "<html><body><h1>" + a + " + " + b + " = " + (a + b) + "</h1></body></html>";
+        List<String> responseHeaders = List.of("Content-Type: text/html");
+        HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, HTML_BODY_CALC);
+        response.info();
+        response.checkLength();
+        output.write(response.getBytes());
     }
 }
