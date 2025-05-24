@@ -32,11 +32,11 @@ public class DefaultStaticResourcesProcessor implements RequestProcessor {
                 break;
             case "html":
                 contentDisposition = "Content-Disposition: inline\r\n";
-                contentType = "Content-Type: text/html";
+                contentType = "Content-Type: text/html\r\n";
                 break;
             default:
                 contentDisposition = "Content-Disposition: attachment; filename=" + filename + "\r\n";;
-                contentType = "Content-Type: application/octet-stream";
+                contentType = "Content-Type: application/octet-stream\r\n";
         }
 
         String response = "HTTP/1.1 200 OK\r\n" +
