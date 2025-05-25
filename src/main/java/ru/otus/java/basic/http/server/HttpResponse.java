@@ -10,7 +10,6 @@ import java.util.List;
 
 public class HttpResponse {
     private static final Logger logger = LogManager.getLogger(HttpResponse.class);
-    public static final int RESPONSE_SIZE_LIMIT = 102400;
 
     private String protocol;
     private String statusCode;
@@ -123,8 +122,8 @@ public class HttpResponse {
     }
 
     public void checkLength() throws IOException {
-        if (this.contentLength() > RESPONSE_SIZE_LIMIT) {
-            throw new IOException("Размер ответа сервера в " + this.contentLength() + " байт превышает установленный лимит в " + HttpResponse.RESPONSE_SIZE_LIMIT + " байт.");
+        if (this.contentLength() > Application.getHttpResponseSizeLimit()) {
+            throw new IOException("Размер ответа сервера в " + this.contentLength() + " байт превышает установленный лимит в " + Application.getHttpResponseSizeLimit() + " байт.");
         }
     }
     public void info() throws IOException {
@@ -136,6 +135,6 @@ public class HttpResponse {
         logger.info("TEXT BODY: {}",  textBody);
         logger.info("FILE BODY: {}",  fileBody);
         logger.info("SIZE: {}", contentLength());
-        logger.info("SIZE_LIMIT: {}", RESPONSE_SIZE_LIMIT);
+        logger.info("SIZE_LIMIT: {}", Application.getHttpResponseSizeLimit());
     }
 }

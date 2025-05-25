@@ -9,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class HttpRequest {
-    public static final int REQUEST_SIZE_LIMIT = 102400;
     private static final Logger logger = LogManager.getLogger(HttpRequest.class);
     private final String rawRequest;
     private HttpMethod method;
@@ -81,8 +80,8 @@ public class HttpRequest {
     }
 
     public void checkLength() throws IOException {
-        if (this.contentLength() > REQUEST_SIZE_LIMIT) {
-            throw new IOException("Размер запроса клиента в " + this.contentLength() + " байт превышает установленный лимит в " + REQUEST_SIZE_LIMIT + " байт.");
+        if (this.contentLength() > Application.getHttpRequestSizeLimit()) {
+            throw new IOException("Размер запроса клиента в " + this.contentLength() + " байт превышает установленный лимит в " + Application.getHttpRequestSizeLimit() + " байт.");
         }
     }
 
@@ -96,6 +95,6 @@ public class HttpRequest {
         logger.info("PARAMETERS: {}", parameters);
         logger.info("BODY: {}",  body);
         logger.info("SIZE: {}", contentLength());
-        logger.info("SIZE_LIMIT: {}", REQUEST_SIZE_LIMIT);
+        logger.info("SIZE_LIMIT: {}", Application.getHttpRequestSizeLimit());
     }
 }
