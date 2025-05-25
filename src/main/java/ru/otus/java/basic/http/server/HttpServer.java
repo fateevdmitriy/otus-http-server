@@ -19,7 +19,7 @@ public class HttpServer {
     public void start(int numThreads) {
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            logger.info("Сервер запущен на порту: {}", port);
+            logger.info("Сервер запущен на порту {}", port);
             serverSocket.setReuseAddress(true);
             while (true) {
                 Socket clientSocket = serverSocket.accept();                 
@@ -30,7 +30,7 @@ public class HttpServer {
             e.printStackTrace();
         } finally {
             executorService.shutdown();
-            logger.info("Сервер завершил работу на порту: {}", port);
+            logger.info("Сервер завершил работу на порту {}", port);
         }
     }
 }
