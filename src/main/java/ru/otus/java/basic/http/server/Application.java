@@ -71,7 +71,8 @@ public class Application {
                 System.lineSeparator() + "Номер порта должен быть в диапазоне " + minServerPort + "-" + maxServerPort +":");
         String userInputStr = scanner.nextLine();
         if (userInputStr.isEmpty()) {
-            throw new InputMismatchException("Не задан номер порта сервера.");
+            logger.error("Не задан номер порта сервера. Будет использоваться порт по-умолчанию, указанный в файле свойств.");
+            return defaultServerPort;
         }
         int serverPort;
         serverPort = Integer.parseInt (userInputStr.trim());

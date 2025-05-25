@@ -28,13 +28,13 @@ public class DefaultStaticResourcesProcessor implements RequestProcessor {
         String contentDisposition;
         String contentType;
         switch (fileType) {
-            case "txt":
-                contentDisposition = "Content-Disposition: inline";
-                contentType = "Content-Type: text/plain";
-                break;
             case "html":
                 contentDisposition = "Content-Disposition: inline";
                 contentType = "Content-Type: text/html";
+                break;
+            case "txt":
+                contentDisposition = "Content-Disposition: attachment; filename=" + filename;
+                contentType = "Content-Type: text/plain";
                 break;
             default:
                 contentDisposition = "Content-Disposition: attachment; filename=" + filename;
