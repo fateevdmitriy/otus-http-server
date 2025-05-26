@@ -18,6 +18,7 @@ public class Application {
     private static int threadPoolSize;
     private static int httpRequestSizeLimit;
     private static int httpResponseSizeLimit;
+    private static int clientHandlerBufferSize;
 
     public static int getHttpRequestSizeLimit() {
         return httpRequestSizeLimit;
@@ -27,10 +28,14 @@ public class Application {
         return httpResponseSizeLimit;
     }
 
+    public static int getClientHandlerBufferSize() {
+        return clientHandlerBufferSize;
+    }
+
     public static void main(String[] args) {
-        int serverPort = defaultServerPort;
+        int serverPort;
         try {
-            initParamsFromProperties(PROPERTY_FILE_NAME);
+            initFromProperties(PROPERTY_FILE_NAME);
             serverPort = askUserForServerPort();
             new HttpServer(serverPort).start(threadPoolSize);
         } catch (IOException e) {
@@ -39,7 +44,7 @@ public class Application {
         }
     }
 
-    private static void initParamsFromProperties(String propertyFileName) throws IOException {
+    private static void initFromProperties(String propertyFileName) throws IOException {
         Properties properties = null;
         File propertyFile = new File(propertyFileName);
         if (!propertyFile.exists() || propertyFile.isDirectory()) {
@@ -53,7 +58,10 @@ public class Application {
                     || !properties.containsKey("maxServerPort")
                     || !properties.containsKey("threadPoolSize")
                     || !properties.containsKey("httpRequestSizeLimit")
-                    || !properties.containsKey("httpResponseSizeLimit")) {
+                    || !properties.containsKey("httpResponseSizeLimit")
+                    || !properties.containsKey("clientHandlerBufferSize")
+            )
+            {
                 throw new IOException("Файл '" + propertyFileName + "' не содержит всех необходимых свойств.");
             }
             defaultServerPort = Integer.parseInt(properties.getProperty("defaultServerPort").trim());
@@ -62,6 +70,7 @@ public class Application {
             threadPoolSize = Integer.parseInt(properties.getProperty("threadPoolSize").trim());
             httpRequestSizeLimit = Integer.parseInt(properties.getProperty("httpRequestSizeLimit").trim());
             httpResponseSizeLimit = Integer.parseInt(properties.getProperty("httpResponseSizeLimit").trim());
+            clientHandlerBufferSize = Integer.parseInt(properties.getProperty("clientHandlerBufferSize").trim());
         }
     }
 

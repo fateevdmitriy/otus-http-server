@@ -9,13 +9,16 @@ import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
 import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 public class GetItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(GetItemProcessor.class);
+    private static final String PROCESSOR_CONTENT_TYPE = "application/json";
     private final ItemsDatabaseProvider itemsDbProvider;
 
     public GetItemProcessor(ItemsDatabaseProvider itemsDbProvider) {
@@ -25,6 +28,9 @@ public class GetItemProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {}", GetItemProcessor.class.getName());
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
+            throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
+        }
 
         if (request.getParameter("id") != null) {
             Long id = Long.parseLong(request.getParameter("id"));
@@ -34,7 +40,7 @@ public class GetItemProcessor implements RequestProcessor {
             }
             Gson gson = new Gson();
             String itemResponse = gson.toJson(item);
-            List<String> responseHeaders = List.of("Content-Type: application/json");
+            Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
             HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, itemResponse);
             response.info();
             response.checkLength();
@@ -45,7 +51,7 @@ public class GetItemProcessor implements RequestProcessor {
         List<Item> items = itemsDbProvider.getAllItems();
         Gson gson = new Gson();
         String itemsResponse = gson.toJson(items);
-        List<String> responseHeaders = List.of("Content-Type: application/json");
+        Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
         HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, itemsResponse);
         response.info();
         response.checkLength();

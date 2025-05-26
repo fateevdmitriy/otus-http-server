@@ -7,45 +7,47 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.otus.java.basic.http.server.HttpResponse;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
 
 public class DefaultStaticResourcesProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(DefaultStaticResourcesProcessor.class);
 
     @Override
-    public void execute(HttpRequest httpRequest, OutputStream output) throws IOException {
+    public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {}", DefaultStaticResourcesProcessor.class.getName());
-
-        String filename = httpRequest.getUri().substring(1);
+        String filename = request.getUri().substring(1);
         Path filePath = Paths.get("static/", filename);
         String fileType = filename.substring(filename.lastIndexOf(".") + 1);
-        byte[] fileData = Files.readAllBytes(filePath);
-
-        String contentDisposition;
-        String contentType;
+        Map<String, String> responseHeaders;
         switch (fileType) {
             case "html":
-                contentDisposition = "Content-Disposition: inline";
-                contentType = "Content-Type: text/html";
+                responseHeaders = Map.of("Content-Disposition", "inline",
+                        "Content-Type", "text/html"
+                );
                 break;
             case "txt":
-                contentDisposition = "Content-Disposition: attachment; filename=" + filename;
-                contentType = "Content-Type: text/plain";
+                responseHeaders = Map.of("Content-Disposition", "attachment; filename=" + filename,
+                        "Content-Type", "text/plain"
+                );
                 break;
             default:
-                contentDisposition = "Content-Disposition: attachment; filename=" + filename;
-                contentType = "Content-Type: application/octet-stream";
+                responseHeaders = Map.of("Content-Disposition", "attachment; filename=" + filename,
+                        "Content-Type", "application/octet-stream"
+                );
         }
-        List<String> responseHeaders = List.of(contentDisposition, contentType);
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(responseHeaders.get("Content-Type"))) {
+            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Сервер не может вернуть ответ типа, который приемлем клиентом.");
+        }
+        byte[] fileData = Files.readAllBytes(filePath);
         HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, fileData);
         response.info();
         response.checkLength();
         output.write(response.getBytes());
-
     }
 }
 

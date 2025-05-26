@@ -10,11 +10,13 @@ import org.apache.logging.log4j.Logger;
 
 public class HttpRequest {
     private static final Logger logger = LogManager.getLogger(HttpRequest.class);
+    private static final String HEADER_KEY_ACCEPT = "Accept";
     private final String rawRequest;
     private HttpMethod method;
     private String body;
     private String uri;
     private Map<String, String> parameters;
+    private Map<String, String> headers;
 
     public HttpMethod getMethod() {
         return method;
@@ -32,6 +34,17 @@ public class HttpRequest {
         return parameters.get(key);
     }
 
+    public String getHeader(String key) {
+        return headers.get(key);
+    }
+
+    public String getHeaderAccept() {
+        if (headers.containsKey(HEADER_KEY_ACCEPT) && headers.get(HEADER_KEY_ACCEPT) != null) {
+            return headers.get(HEADER_KEY_ACCEPT);
+        }
+        return "*/*";
+    }
+
     public boolean containsParameter(String key) {
         return parameters.containsKey(key);
     }
@@ -39,6 +52,7 @@ public class HttpRequest {
     public HttpRequest(String rawRequest) throws MalformedURLException {
         this.rawRequest = rawRequest;
         this.parameters = new HashMap<>();
+        this.headers = new HashMap<>();
         this.parse();
     }
 
@@ -69,6 +83,14 @@ public class HttpRequest {
             this.body = rawRequest.substring(rawRequest.indexOf("\r\n\r\n"));
             logger.debug("body: {}", this.body);
         }
+
+        String headersStr = rawRequest.substring(rawRequest.indexOf(System.lineSeparator())+2, rawRequest.indexOf(System.lineSeparator()+System.lineSeparator()));
+        String[] headersArray = headersStr.split(System.lineSeparator());
+        for (String header : headersArray) {
+            String[] keyVal= header.split(":");
+            headers.put(keyVal[0].trim(), keyVal[1].trim());
+        }
+        logger.debug("headers: {}", headers);
     }
 
     public int contentLength() throws IOException {
@@ -93,6 +115,7 @@ public class HttpRequest {
         logger.info("METHOD: {}", method);
         logger.info("URI: {}", uri);
         logger.info("PARAMETERS: {}", parameters);
+        logger.info("HEADERS: {}", headers);
         logger.info("BODY: {}",  body);
         logger.info("SIZE: {}", contentLength());
         logger.info("SIZE_LIMIT: {}", Application.getHttpRequestSizeLimit());

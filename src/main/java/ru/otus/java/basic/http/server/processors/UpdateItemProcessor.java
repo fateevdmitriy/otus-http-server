@@ -9,15 +9,17 @@ import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Map;
 
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
 import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 public class UpdateItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(UpdateItemProcessor.class);
+    private static final String PROCESSOR_CONTENT_TYPE = "text/html";
     private final ItemsDatabaseProvider itemsDbProvider;
 
     public UpdateItemProcessor(ItemsDatabaseProvider itemsDbProvider) {
@@ -27,6 +29,9 @@ public class UpdateItemProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", UpdateItemProcessor.class.getName());
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
+            throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
+        }
         Gson gson = new Gson();
         Item updItem = gson.fromJson(request.getBody(), Item.class);
         updItem.info();
@@ -44,7 +49,7 @@ public class UpdateItemProcessor implements RequestProcessor {
         }
         int itemsUpdatedCnt = itemsDbProvider.updateItem(updItem);
         logger.info("Обновлено товаров: {}", itemsUpdatedCnt);
-        List<String> responseHeaders = List.of("Content-Type: text/html");
+        Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
         HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders);
         response.info();
         response.checkLength();

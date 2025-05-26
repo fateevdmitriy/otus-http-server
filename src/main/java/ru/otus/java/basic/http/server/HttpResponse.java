@@ -6,15 +6,16 @@ import org.apache.logging.log4j.Logger;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.Map;
 
 public class HttpResponse {
     private static final Logger logger = LogManager.getLogger(HttpResponse.class);
+    private static final String HEADER_KEY_CONTENT_TYPE = "Content-Type";
 
     private String protocol;
     private String statusCode;
     private String statusText;
-    private List<String> headers;
+    private Map<String,String> headers;
     private String textBody;
     private byte[] fileBody;
     private byte[] bytes;
@@ -35,10 +36,24 @@ public class HttpResponse {
         return bytes;
     }
 
+    public String getHeader(String key) {
+        if (headers.containsKey(key)) {
+            return key + ": " +headers.get(key);
+        }
+        return null;
+    }
+
+    public String getHeaderContentType() {
+        if (headers.containsKey(HEADER_KEY_CONTENT_TYPE) && headers.get(HEADER_KEY_CONTENT_TYPE) != null) {
+            return HEADER_KEY_CONTENT_TYPE + ": " +headers.get(HEADER_KEY_CONTENT_TYPE);
+        }
+        return null;
+    }
+
     public HttpResponse(String protocol,
                         String statusCode,
                         String statusText,
-                        List<String> headers
+                        Map<String,String> headers
                         ) {
         this.protocol = protocol;
         this.statusCode = statusCode;
@@ -50,7 +65,7 @@ public class HttpResponse {
     public HttpResponse(String protocol,
                         String statusCode,
                         String statusText,
-                        List<String> headers,
+                        Map<String,String> headers,
                         String textBody
                         ) {
         this.protocol = protocol;
@@ -64,7 +79,7 @@ public class HttpResponse {
     public HttpResponse(String protocol,
                         String statusCode,
                         String statusText,
-                        List<String> headers,
+                        Map<String,String> headers,
                         byte[] fileBody
                         ) {
         this.protocol = protocol;
@@ -84,8 +99,10 @@ public class HttpResponse {
                         .append(this.getStatusText())
                         .append(System.lineSeparator());
         if (!headers.isEmpty()) {
-            for (String header : headers) {
-                responseBuilder.append(header)
+            for (Map.Entry<String,String> entry : headers.entrySet()) {
+                responseBuilder.append(entry.getKey())
+                               .append(": ")
+                               .append(entry.getValue())
                                .append(System.lineSeparator());
             }
         }

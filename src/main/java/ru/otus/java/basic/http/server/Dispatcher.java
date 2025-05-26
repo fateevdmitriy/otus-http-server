@@ -65,6 +65,8 @@ public class Dispatcher {
             new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
         } catch (MethodNotAllowed e) {
             new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
+        } catch (NotAcceptableResponse e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
         } catch (Exception e) {
             new HttpErrorProcessor("500 INTERNAL SERVER ERROR", e.getMessage()).execute(request, output);
             /*

@@ -7,7 +7,6 @@ import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
-    private static final int BUFFER_SIZE = 256;
     private final Socket clientSocket;
     private final Dispatcher dispatcher;
     private static final Logger logger = LogManager.getLogger(ClientHandler.class);
@@ -25,13 +24,14 @@ public class ClientHandler implements Runnable {
             InputStream inputStream = clientSocket.getInputStream();
             if (inputStream != null) {
                 BufferedInputStream bufInStream = new BufferedInputStream(inputStream);
-                byte[] buffer = new byte[BUFFER_SIZE];
+                int bufferSize = Application.getClientHandlerBufferSize();
+                byte[] buffer = new byte[bufferSize];
                 int bytesRead = -1;
                 while ((bytesRead = bufInStream.read(buffer)) != -1) {
                     if (bytesRead > 0) {
                         stringBuilder.append(new String(buffer, 0, bytesRead));
                     }
-                    if (bytesRead < BUFFER_SIZE) {
+                    if (bytesRead < bufferSize) {
                         break;
                     }
                 }

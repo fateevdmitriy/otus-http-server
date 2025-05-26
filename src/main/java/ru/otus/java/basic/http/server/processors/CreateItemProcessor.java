@@ -9,14 +9,16 @@ import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.Map;
 
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
 
 public class CreateItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(CreateItemProcessor.class);
+    private static final String PROCESSOR_CONTENT_TYPE = "text/html";
     private final ItemsDatabaseProvider itemsDbProvider;
 
     public CreateItemProcessor(ItemsDatabaseProvider itemsDbProvider) {
@@ -26,6 +28,9 @@ public class CreateItemProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", CreateItemProcessor.class.getName());
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
+            throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
+        }
         Gson gson = new Gson();
         Item newItem = gson.fromJson(request.getBody(), Item.class);
         logger.info("Название нового продукта: {}", newItem.getTitle());
@@ -39,7 +44,7 @@ public class CreateItemProcessor implements RequestProcessor {
         }
         int itemsAddedCnt = itemsDbProvider.addItem(newItem);
         logger.info("Добавлено товаров: {}",itemsAddedCnt);
-        List<String> responseHeaders = List.of("Content-Type: text/html");
+        Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
         HttpResponse response = new HttpResponse("HTTP/1.1", "201", "Created", responseHeaders);
         response.info();
         response.checkLength();
