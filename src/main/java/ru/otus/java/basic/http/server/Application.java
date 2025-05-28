@@ -84,7 +84,7 @@ public class Application {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Введите номер порта на котором будет работать запускаемый HTTP-сервер."
                 + System.lineSeparator() + "Номер порта должен быть в диапазоне " + getMinServerPort() + " - " + getMaxServerPort() + ":"
-                + System.lineSeparator() + "Если указать пустой порт, будет использован номер порта по-умолчанию, из файла свойств.");
+                + System.lineSeparator() + "Если указать пустой порт, будет использован номер порта по-умолчанию из файла "+PROPERTY_FILE_NAME+".");
         String userInputStr = scanner.nextLine();
         if (userInputStr.isEmpty()) {
             logger.error("Не задан номер порта сервера. Будет использоваться порт по-умолчанию: {}", getDefaultServerPort());
