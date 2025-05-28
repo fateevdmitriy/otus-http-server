@@ -19,8 +19,6 @@ public class CalculatorProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", CalculatorProcessor.class.getName());
-        logger.info("---> request.getHeaderAccept(): '{}'", request.getHeaderAccept());
-        logger.info("---> request.getHeaderAccept().equals(*/*): {}", request.getHeaderAccept().equals("*/*"));
         if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
             throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
         }

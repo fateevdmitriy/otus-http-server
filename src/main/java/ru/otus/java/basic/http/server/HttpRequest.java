@@ -18,6 +18,7 @@ public class HttpRequest {
     private final String rawRequest;
     private HttpMethod method;
     private String uri;
+    private final int[] version;
     private final Map<String, String> parameters;
     private final Map<String, String> headers;
     private StringBuffer body;
@@ -28,6 +29,10 @@ public class HttpRequest {
 
     public String getUri() {
         return uri;
+    }
+
+    public String getVersion() {
+        return Integer.toString(version[0]) + "." + Integer.toString(version[1]);
     }
 
     public Map<String, String> getParameters() { return parameters; }
@@ -53,6 +58,8 @@ public class HttpRequest {
 
     public HttpRequest(String rawRequest) throws IOException {
         this.rawRequest = rawRequest;
+        this.version = new int[2];
+        body = new StringBuffer();
         this.parameters = new HashMap<>();
         this.headers = new HashMap<>();
         this.parse();
@@ -74,9 +81,10 @@ public class HttpRequest {
         if (!HttpMethod.contains(elements[0].trim())) {
             throw new MalformedURLException("В строке инициализации HTTP-запроса указан неизвестный HTTP-метод: " + elements[0]);
         }
-        method = HttpMethod.valueOf(elements[0]);
 
+        method = HttpMethod.valueOf(elements[0]);
         parseUriAndParameters(elements[1]);
+        parseVersion(elements[2]);
 
         // get headers
         String header = reader.readLine();
@@ -84,7 +92,6 @@ public class HttpRequest {
             appendHeaderParameter(header);
             header = reader.readLine();
         }
-
         // get body
         String bodyLine = reader.readLine();
         while (bodyLine != null && !bodyLine.isEmpty()) {
@@ -110,7 +117,18 @@ public class HttpRequest {
                 }
             }
         }
+    }
 
+    private void parseVersion(String rawVersion) throws MalformedURLException {
+        if (rawVersion.indexOf("HTTP/") == 0 && rawVersion.indexOf('.') > 5) {
+            String[] temp = rawVersion.substring(5).split("\\.");
+            try {
+                version[0] = Integer.parseInt(temp[0]);
+                version[1] = Integer.parseInt(temp[1]);
+            } catch (NumberFormatException e) {
+                throw new MalformedURLException("В строке инициализации HTTP-запроса указана некорректная версия HTTP протокола: " + rawVersion);
+            }
+        }
     }
 
     private void appendHeaderParameter(String header)  {
@@ -122,7 +140,7 @@ public class HttpRequest {
     }
 
     private void appendMessageBody(String bodyLine) {
-        body.append(bodyLine).append(System.lineSeparator());
+        body.append(bodyLine.trim()).append(System.lineSeparator());
     }
 
     public boolean containsParameter(String key) {
@@ -147,6 +165,7 @@ public class HttpRequest {
         }
         logger.info("METHOD: {}", method);
         logger.info("URI: {}", uri);
+        logger.info("VERSION: {}", this.getVersion());
         logger.info("PARAMETERS: {}", parameters);
         logger.info("HEADERS: {}", headers);
         logger.info("BODY: {}",  body);

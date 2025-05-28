@@ -21,10 +21,10 @@ public class ItemsDatabaseProviderImpl implements ItemsDatabaseProvider {
 
     public ItemsDatabaseProviderImpl() {
         try {
-            logger.info("-> ItemsDatabaseProviderImpl is started.");
+            logger.info("ItemsDatabaseProviderImpl is started.");
             this.connection = DriverManager.getConnection(DATABASE_URL, "admin", "password");
         } catch (SQLException e) {
-            throw new RuntimeException("-> "+ e);
+            throw new RuntimeException(e);
         }
     }
 
