@@ -19,7 +19,6 @@ public class HttpServer {
     public void start(int numThreads) {
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-
             logger.info("Сервер запущен на порту {}", port);
             serverSocket.setReuseAddress(true);
             while (true) {
@@ -28,6 +27,7 @@ public class HttpServer {
                 executorService.execute(clientHandler);
             }
         } catch (IOException e) {
+            logger.error("Возникло исключение при запуске сервера. {}", e.getMessage());
             e.printStackTrace();
         } finally {
             executorService.shutdown();
@@ -35,4 +35,3 @@ public class HttpServer {
         }
     }
 }
-

@@ -7,6 +7,7 @@ import ru.otus.java.basic.http.server.HttpRequest;
 import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +35,10 @@ public class HttpErrorProcessor implements RequestProcessor {
         String errorMessagePattern = "${errorMessage}";
         String[] elements = errorCode.split(" ",2);
         String filename= "error_" + elements[0] + ".html";
+        File errorFile = new File(filename);
+        if (!errorFile.exists() || errorFile.isDirectory()) {
+            filename= "error.html";
+        }
         try {
             Path filePath = Paths.get("static/", filename);
             byte[] fileBytes = Files.readAllBytes(filePath);

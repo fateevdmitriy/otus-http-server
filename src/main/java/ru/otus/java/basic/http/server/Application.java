@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidParameterException;
 import java.util.*;
 
 public class Application {
@@ -48,7 +49,7 @@ public class Application {
     }
 
     public static String getHttpVersion() {
-        return getProtocolVersionPrefix() + properties.getProperty("httpProtocolVersion").trim();
+        return getProtocolVersionPrefix() + '/' + properties.getProperty("httpProtocolVersion").trim();
     }
 
     public static void main(String[] args) {
@@ -65,14 +66,16 @@ public class Application {
     private static void readPropertiesFromFile() throws IOException {
         File propertyFile = new File(PROPERTY_FILE_NAME);
         if (!propertyFile.exists() || propertyFile.isDirectory()) {
-            throw new IOException("Файл '" + PROPERTY_FILE_NAME + "' не существует.");
+            throw new FileNotFoundException("Файл '" + PROPERTY_FILE_NAME + "' не существует.");
         }
         try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(PROPERTY_FILE_NAME), StandardCharsets.UTF_8))) {
             properties = new Properties();
             properties.load(in);
             for (String propName: propertyNames) {
                 if (!properties.containsKey(propName)) {
-                    throw new IOException("Файл '" + PROPERTY_FILE_NAME + "' не содержит необходимого свойства '" + propName +"'.");
+                    throw new InvalidParameterException("Файл конфигурации '" + PROPERTY_FILE_NAME + "' не содержит необходимого свойства '" + propName +"'.");
+                } else if (properties.getProperty(propName).isEmpty()) {
+                    throw new InvalidParameterException("Файл конфигурации '" + PROPERTY_FILE_NAME + "' не содержит значения свойства '" + propName +"'.");
                 }
             }
         }
@@ -81,8 +84,8 @@ public class Application {
     private static int askUserForServerPort() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Введите номер порта на котором будет работать запускаемый HTTP-сервер."
-                + System.lineSeparator() + "Номер порта должен быть в диапазоне " + getMinServerPort() + "-" + getMaxServerPort() + ":"
-                + System.lineSeparator() + "Если указать пустой порт, будет использован номер порта по-умолчанию,ы из файла свойств.");
+                + System.lineSeparator() + "Номер порта должен быть в диапазоне " + getMinServerPort() + " - " + getMaxServerPort() + ":"
+                + System.lineSeparator() + "Если указать пустой порт, будет использован номер порта по-умолчанию, из файла свойств.");
         String userInputStr = scanner.nextLine();
         if (userInputStr.isEmpty()) {
             logger.error("Не задан номер порта сервера. Будет использоваться порт по-умолчанию: {}", getDefaultServerPort());
