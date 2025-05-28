@@ -15,7 +15,7 @@ import java.util.Map;
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
 import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 public class UpdateItemProcessor implements RequestProcessor {
@@ -30,13 +30,14 @@ public class UpdateItemProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", UpdateItemProcessor.class.getName());
-        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(PROCESSOR_CONTENT_TYPE.toLowerCase())) {
+            throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
                     + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
+
         Gson gson = new Gson();
         Item updItem = gson.fromJson(request.getBody().toString(), Item.class);
-        updItem.info();
         if (updItem.getId() == null) {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса идентификатор продукта не может быть пустым.");
         }
@@ -51,6 +52,7 @@ public class UpdateItemProcessor implements RequestProcessor {
         }
         int itemsUpdatedCnt = itemsDbProvider.updateItem(updItem);
         logger.info("Обновлено товаров: {}", itemsUpdatedCnt);
+
         Map<String, String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
         HttpResponse response = new HttpResponse(Application.getHttpVersion(), "200", "OK", responseHeaders);
         response.info();

@@ -58,8 +58,7 @@ public class Application {
             int serverPort = askUserForServerPort();
             new HttpServer(serverPort).start(getThreadPoolSize());
         } catch (IOException e) {
-            logger.error("Файл свойств '{}' не найден или не содержит данных. {}", PROPERTY_FILE_NAME, e.getMessage());
-            e.printStackTrace();
+            logger.error("Файл свойств '{}' не найден или не содержит корректных данных. {}", PROPERTY_FILE_NAME, e.getMessage());
         }
     }
 
@@ -94,7 +93,7 @@ public class Application {
         int serverPort;
         serverPort = Integer.parseInt(userInputStr.trim());
         if (serverPort < getMinServerPort() || serverPort > getMaxServerPort()) {
-            throw new InputMismatchException("Введённый номер порта не входит в разрешенный диапазон номеров портов " + getMinServerPort() + "-" + getMaxServerPort() + ".");
+            throw new InputMismatchException("Заданный номер порта не входит в разрешенный диапазон " + getMinServerPort() + "-" + getMaxServerPort() + ".");
         }
         return serverPort;
     }

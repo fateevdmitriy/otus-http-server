@@ -111,14 +111,14 @@ public class HttpResponse {
         byte[] result = new byte[0];
         if (textBody != null && !textBody.isEmpty()) {
             responseBuilder.append(textBody);
-            logger.info("Response with textBody:{}{}", System.lineSeparator(), responseBuilder);
+            logger.debug("Response with textBody:{}{}", System.lineSeparator(), responseBuilder);
             result = responseBuilder.toString().getBytes(StandardCharsets.UTF_8);
-        } else if (fileBody !=null && fileBody.length > 0) {
+        } else if (fileBody != null && fileBody.length > 0) {
             try {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 baos.write(responseBuilder.toString().getBytes(StandardCharsets.UTF_8));
                 baos.write(fileBody);
-                logger.info("Response with fileBody:{}{}", System.lineSeparator(), baos.toString(StandardCharsets.UTF_8));
+                logger.debug("Response with fileBody:{}{}", System.lineSeparator(), baos.toString(StandardCharsets.UTF_8));
                 result = baos.toByteArray();
             } catch (IOException e) {
                 logger.info("Возникло исключение при формировании отклика сервером. {}", e.getMessage());

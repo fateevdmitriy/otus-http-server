@@ -2,6 +2,10 @@ package ru.otus.java.basic.http.server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.BadRequestException;
+import ru.otus.java.basic.http.server.exceptions.MethodNotAllowedException;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
+import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 import ru.otus.java.basic.http.server.processors.HttpErrorProcessor;
 
 import java.io.*;
@@ -22,7 +26,6 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         logger.info("Новый клиент подключился к серверу.");
-
         StringBuilder stringBuilder = new StringBuilder();
         try {
             InputStream inputStream = clientSocket.getInputStream();
@@ -39,9 +42,11 @@ public class ClientHandler implements Runnable {
                         break;
                     }
                 }
+            } else {
+                throw new IOException("Не удалось получить соединение клиента с сервером.");
             }
             String rawRequest = stringBuilder.toString();
-            logger.info("rawRequest:{}{}", System.lineSeparator(), rawRequest);
+            logger.debug("rawRequest:{}{}", System.lineSeparator(), rawRequest);
             if (rawRequest.isEmpty()) {
                 logger.error("Получен пустой запрос от клиента.");
                 return;
@@ -52,8 +57,18 @@ public class ClientHandler implements Runnable {
             request.checkLength();
             dispatcher.execute(request, out);
 
+        } catch (BadRequestException e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(out);
+        } catch (NotFoundException e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(out);
+        } catch (MethodNotAllowedException e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(out);
+        } catch (NotAcceptableResponseException e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(out);
         } catch (IOException e) {
-            new HttpErrorProcessor("503 SERVICE UNAVAILABLE", "Возникло исключение при соединении клиента с сервером.").execute(null, out);
+            new HttpErrorProcessor("503 SERVICE UNAVAILABLE", "Возникло исключение при соединении клиента с сервером." + e.getMessage()).execute(out);
+        } catch (Exception e) {
+            new HttpErrorProcessor("500 INTERNAL SERVER ERROR", e.getMessage()).execute(out);
         } finally {
             disconnect();
         }
@@ -66,7 +81,6 @@ public class ClientHandler implements Runnable {
             }
         } catch (IOException e) {
             logger.error("Возникло исключение при завершении соединения клиента с сервером.");
-            e.printStackTrace();
         }
     }
 }

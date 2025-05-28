@@ -14,7 +14,7 @@ import java.util.Map;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
 import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 public class GetItemProcessor implements RequestProcessor {
@@ -30,9 +30,8 @@ public class GetItemProcessor implements RequestProcessor {
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {}", GetItemProcessor.class.getName());
 
-        logger.debug("request.getHeaderAccept(): {}", request.getHeaderAccept());
-        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(PROCESSOR_CONTENT_TYPE.toLowerCase())) {
+            throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
                     + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
 
@@ -55,6 +54,7 @@ public class GetItemProcessor implements RequestProcessor {
         List<Item> items = itemsDbProvider.getAllItems();
         Gson gson = new Gson();
         String itemsResponse = gson.toJson(items);
+
         Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
         HttpResponse response = new HttpResponse(Application.getHttpVersion(), "200", "OK", responseHeaders, itemsResponse);
         response.info();

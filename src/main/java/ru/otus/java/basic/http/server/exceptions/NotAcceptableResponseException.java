@@ -1,6 +1,6 @@
 package ru.otus.java.basic.http.server.exceptions;
 
-public class MethodNotAllowed extends RuntimeException {
+public class NotAcceptableResponseException extends RuntimeException {
     private final String code;
     private final String message;
 
@@ -13,8 +13,9 @@ public class MethodNotAllowed extends RuntimeException {
         return message;
     }
 
-    public MethodNotAllowed(String code, String message) {
+    public NotAcceptableResponseException(String code, String message) {
         this.code = code;
         this.message = message;
     }
 }
+

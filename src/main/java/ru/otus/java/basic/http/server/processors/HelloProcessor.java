@@ -10,7 +10,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.otus.java.basic.http.server.HttpResponse;
-import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
 
 
 public class HelloProcessor implements RequestProcessor {
@@ -21,8 +21,8 @@ public class HelloProcessor implements RequestProcessor {
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", HelloProcessor.class.getName());
 
-        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(PROCESSOR_CONTENT_TYPE.toLowerCase())) {
+            throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
                     + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
 

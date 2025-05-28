@@ -15,7 +15,7 @@ import java.util.Map;
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
 
 public class CreateItemProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(CreateItemProcessor.class);
@@ -29,15 +29,17 @@ public class CreateItemProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", CreateItemProcessor.class.getName());
-        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(PROCESSOR_CONTENT_TYPE.toLowerCase())) {
+            throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
                     + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
+
         Gson gson = new Gson();
         Item newItem = gson.fromJson(request.getBody().toString(), Item.class);
-        logger.info("Название нового продукта: {}", newItem.getTitle());
-        logger.info("Цена нового продукта: {}", newItem.getPrice());
-        logger.info("Вес нового продукта: {}", newItem.getWeight());
+        logger.debug("Название нового продукта: {}", newItem.getTitle());
+        logger.debug("Цена нового продукта: {}", newItem.getPrice());
+        logger.debug("Вес нового продукта: {}", newItem.getWeight());
         if (newItem.getTitle() == null || newItem.getTitle().isEmpty()) {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса название продукта не может быть пустым.");
         }
@@ -46,6 +48,7 @@ public class CreateItemProcessor implements RequestProcessor {
         }
         int itemsAddedCnt = itemsDbProvider.addItem(newItem);
         logger.info("Добавлено товаров: {}",itemsAddedCnt);
+
         Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
         HttpResponse response = new HttpResponse(Application.getHttpVersion(), "201", "Created", responseHeaders);
         response.info();

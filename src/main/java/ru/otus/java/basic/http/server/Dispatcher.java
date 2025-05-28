@@ -17,12 +17,11 @@ import org.apache.logging.log4j.Logger;
 
 public class Dispatcher {
     private static final Logger logger = LogManager.getLogger(Dispatcher.class);
-    private final ItemsDatabaseProvider itemsDbProvider;
     private final Map<String, Map<String, RequestProcessor>> methods;
     private final RequestProcessor defaultStaticResourceProcessor;
 
     public Dispatcher() {
-        this.itemsDbProvider = new ItemsDatabaseProviderImpl();
+        ItemsDatabaseProvider itemsDbProvider = new ItemsDatabaseProviderImpl();
         this.methods = new HashMap<>();
         this.methods.put("/hello", Map.of("GET", new HelloProcessor()));
         this.methods.put("/calculator", Map.of("GET", new CalculatorProcessor()));
@@ -36,7 +35,6 @@ public class Dispatcher {
     }
 
     public void execute(HttpRequest request, OutputStream output) throws IOException {
-        try {
             logger.info("Запуск диспетчера запросов.");
 
             if (Files.exists(Paths.get("static/", request.getUri().substring(1)))) {
@@ -53,23 +51,11 @@ public class Dispatcher {
 
             if (!processors.containsKey(request.getMethod().toString())) {
                 if (request.getMethod().equals(HttpMethod.POST) && processors.containsKey("GET")) {
-                    throw new MethodNotAllowed("405 METHOD NOT ALLOWED", "В запросе указан недопустимый HTTP-метод для запрошенного URI.");
+                    throw new MethodNotAllowedException("405 METHOD NOT ALLOWED", "В запросе указан недопустимый HTTP-метод для запрошенного URI.");
                 }
                 throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
             }
 
             processors.get(request.getMethod().toString()).execute(request, output);
-
-        } catch (BadRequestException e) {
-            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
-        } catch (NotFoundException e) {
-            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
-        } catch (MethodNotAllowed e) {
-            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
-        } catch (NotAcceptableResponse e) {
-            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
-        } catch (Exception e) {
-            new HttpErrorProcessor("500 INTERNAL SERVER ERROR", e.getMessage()).execute(request, output);
-        }
     }
 }

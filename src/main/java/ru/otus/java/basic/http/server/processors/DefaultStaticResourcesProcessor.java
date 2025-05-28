@@ -13,7 +13,7 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.otus.java.basic.http.server.HttpResponse;
-import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
 
 public class DefaultStaticResourcesProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(DefaultStaticResourcesProcessor.class);
@@ -44,8 +44,9 @@ public class DefaultStaticResourcesProcessor implements RequestProcessor {
                         "Content-Type", "application/octet-stream"
                 );
         }
-        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(responseHeaders.get("Content-Type"))) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(responseHeaders.get("Content-Type").toLowerCase())) {
+            throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
                     + responseHeaders.get("Content-Type") + ", клиент принимает типы: " + request.getHeaderAccept());
 
         }

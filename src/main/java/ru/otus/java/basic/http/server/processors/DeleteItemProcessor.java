@@ -8,7 +8,7 @@ import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.application.Item;
 import ru.otus.java.basic.http.server.application.ItemsDatabaseProvider;
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
-import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
 import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
 import java.io.IOException;
@@ -27,10 +27,12 @@ public class DeleteItemProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", DeleteItemProcessor.class.getName());
-        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(PROCESSOR_CONTENT_TYPE.toLowerCase())) {
+            throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
                     + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
+
         if (request.getParameter("id") == null) {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса не указан идентификатор удаляемого продукта.");
         }
@@ -41,6 +43,7 @@ public class DeleteItemProcessor implements RequestProcessor {
         }
         int itemsDeletedCnt = itemsDbProvider.deleteItemById(id);
         logger.info("Удалено товаров: {}", itemsDeletedCnt);
+
         Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
         HttpResponse response = new HttpResponse(Application.getHttpVersion(), "204", "No Content", responseHeaders);
         response.info();

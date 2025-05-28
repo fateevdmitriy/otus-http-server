@@ -21,7 +21,7 @@ public class ItemsDatabaseProviderImpl implements ItemsDatabaseProvider {
 
     public ItemsDatabaseProviderImpl() {
         try {
-            logger.info("ItemsDatabaseProviderImpl is started.");
+            logger.debug("Запущен провайдер БД ItemsDatabaseProviderImpl.");
             this.connection = DriverManager.getConnection(DATABASE_URL, "admin", "password");
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -107,5 +107,4 @@ public class ItemsDatabaseProviderImpl implements ItemsDatabaseProvider {
             throw new RuntimeException(e);
         }
     }
-
 }

@@ -5,7 +5,7 @@ import org.apache.logging.log4j.Logger;
 import ru.otus.java.basic.http.server.Application;
 import ru.otus.java.basic.http.server.HttpRequest;
 import ru.otus.java.basic.http.server.HttpResponse;
-import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponse;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,7 +18,9 @@ import java.util.Map;
 
 public class HttpErrorProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(HttpErrorProcessor.class);
+    private static final String FILEPATH = "static/";
     private static final String PROCESSOR_CONTENT_TYPE = "text/html";
+
     private final String errorCode;
     private final String errorMessage;
 
@@ -35,12 +37,14 @@ public class HttpErrorProcessor implements RequestProcessor {
         String errorMessagePattern = "${errorMessage}";
         String[] elements = errorCode.split(" ",2);
         String filename= "error_" + elements[0] + ".html";
-        File errorFile = new File(filename);
+        logger.debug("Имя файла-шаблона описания ошибки: {}", filename);
+        File errorFile = new File(FILEPATH + filename);
         if (!errorFile.exists() || errorFile.isDirectory()) {
+            logger.debug("Не найден файл-шаблон описания ошибки: {}, будет использован общий файл.", filename);
             filename= "error.html";
         }
         try {
-            Path filePath = Paths.get("static/", filename);
+            Path filePath = Paths.get(FILEPATH, filename);
             byte[] fileBytes = Files.readAllBytes(filePath);
             String fileContent = new String(fileBytes, StandardCharsets.UTF_8);
             String modifiedContent = fileContent
@@ -53,10 +57,14 @@ public class HttpErrorProcessor implements RequestProcessor {
             e.printStackTrace();
         }
 
-        if (request != null && !request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+        if (request != null && !request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(PROCESSOR_CONTENT_TYPE.toLowerCase())) {
+            throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
                     + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
+    }
+
+    public void execute(OutputStream output) {
+        execute(null, output);
     }
 
     private static HttpResponse getHttpResponse(String content, String[] elements) throws IOException {
