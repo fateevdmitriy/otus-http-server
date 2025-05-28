@@ -1,5 +1,6 @@
 package ru.otus.java.basic.http.server.processors;
 
+import ru.otus.java.basic.http.server.Application;
 import ru.otus.java.basic.http.server.HttpRequest;
 
 import java.io.IOException;
@@ -19,12 +20,15 @@ public class HelloProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", HelloProcessor.class.getName());
+
         if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
+            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+                    + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
+
         final String HTML_BODY_HELLO = "<html><body><h1>Hello, USER!!!</h1></body></html>";
         Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
-        HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, HTML_BODY_HELLO);
+        HttpResponse response = new HttpResponse(Application.getHttpVersion(), "200", "OK", responseHeaders, HTML_BODY_HELLO);
         response.info();
         response.checkLength();
         output.write(response.getBytes());

@@ -1,6 +1,7 @@
 package ru.otus.java.basic.http.server.processors;
 
 import com.google.gson.Gson;
+import ru.otus.java.basic.http.server.Application;
 import ru.otus.java.basic.http.server.HttpRequest;
 import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.application.Item;
@@ -28,8 +29,11 @@ public class GetItemProcessor implements RequestProcessor {
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {}", GetItemProcessor.class.getName());
+
+        logger.debug("request.getHeaderAccept(): {}", request.getHeaderAccept());
         if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
+            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+                    + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
 
         if (request.getParameter("id") != null) {
@@ -41,7 +45,7 @@ public class GetItemProcessor implements RequestProcessor {
             Gson gson = new Gson();
             String itemResponse = gson.toJson(item);
             Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
-            HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, itemResponse);
+            HttpResponse response = new HttpResponse(Application.getHttpVersion(), "200", "OK", responseHeaders, itemResponse);
             response.info();
             response.checkLength();
             output.write(response.getBytes());
@@ -52,7 +56,7 @@ public class GetItemProcessor implements RequestProcessor {
         Gson gson = new Gson();
         String itemsResponse = gson.toJson(items);
         Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
-        HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, itemsResponse);
+        HttpResponse response = new HttpResponse(Application.getHttpVersion(), "200", "OK", responseHeaders, itemsResponse);
         response.info();
         response.checkLength();
         output.write(response.getBytes());

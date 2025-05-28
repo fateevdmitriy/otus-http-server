@@ -39,7 +39,8 @@ public class ClientHandler implements Runnable {
             String rawRequest = stringBuilder.toString();
             logger.info("rawRequest:{}{}", System.lineSeparator(), rawRequest);
             if (rawRequest.isEmpty()) {
-                throw new IOException("Получен пустой запрос от клиента.");
+                logger.error("Получен пустой запрос от клиента.");
+                return;
             }
 
             HttpRequest request = new HttpRequest(rawRequest);

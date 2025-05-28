@@ -1,5 +1,6 @@
 package ru.otus.java.basic.http.server.processors;
 
+import ru.otus.java.basic.http.server.Application;
 import ru.otus.java.basic.http.server.HttpRequest;
 
 import java.io.IOException;
@@ -20,7 +21,8 @@ public class CalculatorProcessor implements RequestProcessor {
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", CalculatorProcessor.class.getName());
         if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
+            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+                    + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
         if (!request.containsParameter("a")) {
             throw new BadRequestException("400 BAD REQUEST", "Отсутствует параметр запроса 'a'");
@@ -42,7 +44,7 @@ public class CalculatorProcessor implements RequestProcessor {
         }
         final String HTML_BODY_CALC = "<html><body><h1>" + a + " + " + b + " = " + (a + b) + "</h1></body></html>";
         Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
-        HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, HTML_BODY_CALC);
+        HttpResponse response = new HttpResponse(Application.getHttpVersion(), "200", "OK", responseHeaders, HTML_BODY_CALC);
         response.info();
         response.checkLength();
         output.write(response.getBytes());

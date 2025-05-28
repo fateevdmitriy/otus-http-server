@@ -19,6 +19,7 @@ public class HttpServer {
     public void start(int numThreads) {
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
         try (ServerSocket serverSocket = new ServerSocket(port)) {
+
             logger.info("Сервер запущен на порту {}", port);
             serverSocket.setReuseAddress(true);
             while (true) {
@@ -34,3 +35,4 @@ public class HttpServer {
         }
     }
 }
+

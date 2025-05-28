@@ -5,88 +5,93 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.InputMismatchException;
-import java.util.Properties;
-import java.util.Scanner;
+import java.util.*;
 
 public class Application {
     private static final Logger logger = LogManager.getLogger(Application.class);
     private static final String PROPERTY_FILE_NAME = "otus-http-server.properties";
-    private static int minServerPort;
-    private static int maxServerPort;
-    private static int defaultServerPort;
-    private static int threadPoolSize;
-    private static int httpRequestSizeLimit;
-    private static int httpResponseSizeLimit;
-    private static int clientHandlerBufferSize;
+    private static Properties properties;
+    private static final List<String> propertyNames = Arrays.asList(
+            "defaultServerPort", "minServerPort", "maxServerPort", "threadPoolSize", "httpRequestSizeLimit",
+            "httpResponseSizeLimit", "clientHandlerBufferSize", "protocolVersionPrefix", "httpProtocolVersion");
+
+    public static int getDefaultServerPort() {
+        return Integer.parseInt(properties.getProperty("defaultServerPort").trim());
+    }
+
+    public static int getMinServerPort() {
+        return Integer.parseInt(properties.getProperty("minServerPort").trim());
+    }
+
+    public static int getMaxServerPort() {
+        return Integer.parseInt(properties.getProperty("maxServerPort").trim());
+    }
+
+    public static int getThreadPoolSize() {
+        return Integer.parseInt(properties.getProperty("threadPoolSize").trim());
+    }
 
     public static int getHttpRequestSizeLimit() {
-        return httpRequestSizeLimit;
+        return Integer.parseInt(properties.getProperty("httpRequestSizeLimit").trim());
     }
 
     public static int getHttpResponseSizeLimit() {
-        return httpResponseSizeLimit;
+        return Integer.parseInt(properties.getProperty("httpResponseSizeLimit").trim());
     }
 
     public static int getClientHandlerBufferSize() {
-        return clientHandlerBufferSize;
+        return Integer.parseInt(properties.getProperty("clientHandlerBufferSize").trim());
+    }
+
+    public static String getProtocolVersionPrefix() {
+        return properties.getProperty("protocolVersionPrefix").trim();
+    }
+
+    public static String getHttpVersion() {
+        return getProtocolVersionPrefix() + properties.getProperty("httpProtocolVersion").trim();
     }
 
     public static void main(String[] args) {
-        int serverPort;
         try {
-            initFromProperties(PROPERTY_FILE_NAME);
-            serverPort = askUserForServerPort();
-            new HttpServer(serverPort).start(threadPoolSize);
+            readPropertiesFromFile();
+            int serverPort = askUserForServerPort();
+            new HttpServer(serverPort).start(getThreadPoolSize());
         } catch (IOException e) {
             logger.error("Файл свойств '{}' не найден или не содержит данных. {}", PROPERTY_FILE_NAME, e.getMessage());
             e.printStackTrace();
         }
     }
 
-    private static void initFromProperties(String propertyFileName) throws IOException {
-        Properties properties = null;
-        File propertyFile = new File(propertyFileName);
+    private static void readPropertiesFromFile() throws IOException {
+        File propertyFile = new File(PROPERTY_FILE_NAME);
         if (!propertyFile.exists() || propertyFile.isDirectory()) {
-            throw new IOException("Файл '" + propertyFileName + "' не существует.");
+            throw new IOException("Файл '" + PROPERTY_FILE_NAME + "' не существует.");
         }
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(propertyFileName), StandardCharsets.UTF_8))) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(PROPERTY_FILE_NAME), StandardCharsets.UTF_8))) {
             properties = new Properties();
             properties.load(in);
-            if (!properties.containsKey("defaultServerPort")
-                    || !properties.containsKey("minServerPort")
-                    || !properties.containsKey("maxServerPort")
-                    || !properties.containsKey("threadPoolSize")
-                    || !properties.containsKey("httpRequestSizeLimit")
-                    || !properties.containsKey("httpResponseSizeLimit")
-                    || !properties.containsKey("clientHandlerBufferSize")
-            )
-            {
-                throw new IOException("Файл '" + propertyFileName + "' не содержит всех необходимых свойств.");
+            for (String propName: propertyNames) {
+                if (!properties.containsKey(propName)) {
+                    throw new IOException("Файл '" + PROPERTY_FILE_NAME + "' не содержит необходимого свойства '" + propName +"'.");
+                }
             }
-            defaultServerPort = Integer.parseInt(properties.getProperty("defaultServerPort").trim());
-            minServerPort = Integer.parseInt(properties.getProperty("minServerPort").trim());
-            maxServerPort = Integer.parseInt(properties.getProperty("maxServerPort").trim());
-            threadPoolSize = Integer.parseInt(properties.getProperty("threadPoolSize").trim());
-            httpRequestSizeLimit = Integer.parseInt(properties.getProperty("httpRequestSizeLimit").trim());
-            httpResponseSizeLimit = Integer.parseInt(properties.getProperty("httpResponseSizeLimit").trim());
-            clientHandlerBufferSize = Integer.parseInt(properties.getProperty("clientHandlerBufferSize").trim());
         }
     }
 
     private static int askUserForServerPort() {
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Введите номер порта на котором будет работать запускаемый HTTP-сервер." +
-                System.lineSeparator() + "Номер порта должен быть в диапазоне " + minServerPort + "-" + maxServerPort +":");
+        System.out.println("Введите номер порта на котором будет работать запускаемый HTTP-сервер."
+                + System.lineSeparator() + "Номер порта должен быть в диапазоне " + getMinServerPort() + "-" + getMaxServerPort() + ":"
+                + System.lineSeparator() + "Если указать пустой порт, будет использован номер порта по-умолчанию,ы из файла свойств.");
         String userInputStr = scanner.nextLine();
         if (userInputStr.isEmpty()) {
-            logger.error("Не задан номер порта сервера. Будет использоваться порт по-умолчанию, указанный в файле свойств: {}", defaultServerPort);
-            return defaultServerPort;
+            logger.error("Не задан номер порта сервера. Будет использоваться порт по-умолчанию: {}", getDefaultServerPort());
+            return getDefaultServerPort();
         }
         int serverPort;
-        serverPort = Integer.parseInt (userInputStr.trim());
-        if (serverPort < minServerPort || serverPort > maxServerPort) {
-            throw new InputMismatchException("Введённый номер порта не входит в разрешенный диапазон номеров портов " + minServerPort + "-" + maxServerPort +".");
+        serverPort = Integer.parseInt(userInputStr.trim());
+        if (serverPort < getMinServerPort() || serverPort > getMaxServerPort()) {
+            throw new InputMismatchException("Введённый номер порта не входит в разрешенный диапазон номеров портов " + getMinServerPort() + "-" + getMaxServerPort() + ".");
         }
         return serverPort;
     }

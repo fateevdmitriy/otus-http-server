@@ -18,8 +18,8 @@ public class HttpRequest {
     private final String rawRequest;
     private HttpMethod method;
     private String uri;
-    private final int[] version;
     private final Map<String, String> parameters;
+    private final int[] version;
     private final Map<String, String> headers;
     private StringBuffer body;
 
@@ -31,22 +31,18 @@ public class HttpRequest {
         return uri;
     }
 
-    public String getVersion() {
-        return Integer.toString(version[0]) + "." + Integer.toString(version[1]);
-    }
-
     public Map<String, String> getParameters() { return parameters; }
 
     public String getParameter(String key) {
         return parameters.get(key);
     }
 
-    public Map<String, String> getHeaders() {
-        return headers;
+    public String getVersion() {
+        return Integer.toString(version[0]) + "." + Integer.toString(version[1]);
     }
 
-    public StringBuffer getBody() {
-        return body;
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 
     public String getHeaderAccept() {
@@ -56,12 +52,16 @@ public class HttpRequest {
         return "*/*";
     }
 
+    public StringBuffer getBody() {
+        return body;
+    }
+
     public HttpRequest(String rawRequest) throws IOException {
         this.rawRequest = rawRequest;
         this.version = new int[2];
-        body = new StringBuffer();
         this.parameters = new HashMap<>();
         this.headers = new HashMap<>();
+        body = new StringBuffer();
         this.parse();
     }
 

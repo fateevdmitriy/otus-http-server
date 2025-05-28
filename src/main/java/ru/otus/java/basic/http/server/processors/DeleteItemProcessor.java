@@ -2,6 +2,7 @@ package ru.otus.java.basic.http.server.processors;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.Application;
 import ru.otus.java.basic.http.server.HttpRequest;
 import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.application.Item;
@@ -27,7 +28,8 @@ public class DeleteItemProcessor implements RequestProcessor {
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", DeleteItemProcessor.class.getName());
         if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(PROCESSOR_CONTENT_TYPE)) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
+            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+                    + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
         }
         if (request.getParameter("id") == null) {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса не указан идентификатор удаляемого продукта.");
@@ -40,7 +42,7 @@ public class DeleteItemProcessor implements RequestProcessor {
         int itemsDeletedCnt = itemsDbProvider.deleteItemById(id);
         logger.info("Удалено товаров: {}", itemsDeletedCnt);
         Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
-        HttpResponse response = new HttpResponse("HTTP/1.1", "204", "No Content", responseHeaders);
+        HttpResponse response = new HttpResponse(Application.getHttpVersion(), "204", "No Content", responseHeaders);
         response.info();
         response.checkLength();
         output.write(response.getBytes());

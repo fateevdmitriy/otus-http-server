@@ -1,5 +1,6 @@
 package ru.otus.java.basic.http.server.processors;
 
+import ru.otus.java.basic.http.server.Application;
 import ru.otus.java.basic.http.server.HttpRequest;
 
 import java.io.IOException;
@@ -44,10 +45,12 @@ public class DefaultStaticResourcesProcessor implements RequestProcessor {
                 );
         }
         if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().contains(responseHeaders.get("Content-Type"))) {
-            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Сервер не может вернуть ответ типа, который приемлем клиентом.");
+            throw new NotAcceptableResponse("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+                    + responseHeaders.get("Content-Type") + ", клиент принимает типы: " + request.getHeaderAccept());
+
         }
         byte[] fileData = Files.readAllBytes(filePath);
-        HttpResponse response = new HttpResponse("HTTP/1.1", "200", "OK", responseHeaders, fileData);
+        HttpResponse response = new HttpResponse(Application.getHttpVersion(), "200", "OK", responseHeaders, fileData);
         response.info();
         response.checkLength();
         output.write(response.getBytes());
