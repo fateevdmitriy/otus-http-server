@@ -38,6 +38,7 @@ public class Dispatcher {
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         try {
             logger.info("Запуск диспетчера запросов.");
+
             if (Files.exists(Paths.get("static/", request.getUri().substring(1)))) {
                 defaultStaticResourceProcessor.execute(request, output);
                 return;
@@ -69,14 +70,6 @@ public class Dispatcher {
             new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(request, output);
         } catch (Exception e) {
             new HttpErrorProcessor("500 INTERNAL SERVER ERROR", e.getMessage()).execute(request, output);
-            /*
-            String response = "" +
-                    "HTTP/1.1 500 Internal Server Error\r\n" +
-                    "Content-Type: text/html\r\n" +
-                    "\r\n" +
-                    "<html><body><h1> INTERNAL SERVER ERROR : " + e.getMessage() + "</h1></body></html>";
-            output.write(response.getBytes(StandardCharsets.UTF_8));
-             */
         }
     }
 }

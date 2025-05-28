@@ -33,7 +33,7 @@ public class UpdateItemProcessor implements RequestProcessor {
             throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
         }
         Gson gson = new Gson();
-        Item updItem = gson.fromJson(request.getBody(), Item.class);
+        Item updItem = gson.fromJson(request.getBody().toString(), Item.class);
         updItem.info();
         if (updItem.getId() == null) {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса идентификатор продукта не может быть пустым.");

@@ -125,7 +125,6 @@ public class HttpResponse {
                 e.printStackTrace();
             }
         } else {
-            logger.info("Response without body:{}{}", System.lineSeparator(), responseBuilder);
             result = responseBuilder.toString().getBytes(StandardCharsets.UTF_8);
         }
         return result;

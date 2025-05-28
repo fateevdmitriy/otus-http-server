@@ -26,17 +26,20 @@ public class DefaultStaticResourcesProcessor implements RequestProcessor {
         Map<String, String> responseHeaders;
         switch (fileType) {
             case "html":
-                responseHeaders = Map.of("Content-Disposition", "inline",
+                responseHeaders = Map.of(
+                        "Content-Disposition", "inline",
                         "Content-Type", "text/html"
                 );
                 break;
             case "txt":
-                responseHeaders = Map.of("Content-Disposition", "attachment; filename=" + filename,
+                responseHeaders = Map.of(
+                        "Content-Disposition", "attachment; filename=" + filename,
                         "Content-Type", "text/plain"
                 );
                 break;
             default:
-                responseHeaders = Map.of("Content-Disposition", "attachment; filename=" + filename,
+                responseHeaders = Map.of(
+                        "Content-Disposition", "attachment; filename=" + filename,
                         "Content-Type", "application/octet-stream"
                 );
         }

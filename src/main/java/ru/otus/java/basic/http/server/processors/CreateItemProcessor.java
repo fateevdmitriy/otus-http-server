@@ -32,7 +32,7 @@ public class CreateItemProcessor implements RequestProcessor {
             throw new NotAcceptableResponse("406 NOT ACCEPTABLE","Сервер не может вернуть ответ типа, который приемлем клиентом.");
         }
         Gson gson = new Gson();
-        Item newItem = gson.fromJson(request.getBody(), Item.class);
+        Item newItem = gson.fromJson(request.getBody().toString(), Item.class);
         logger.info("Название нового продукта: {}", newItem.getTitle());
         logger.info("Цена нового продукта: {}", newItem.getPrice());
         logger.info("Вес нового продукта: {}", newItem.getWeight());

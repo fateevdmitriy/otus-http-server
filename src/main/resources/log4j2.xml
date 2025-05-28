@@ -37,7 +37,7 @@
 
     <Loggers>
         <!-- Корневой логгер: применяется по умолчанию ко всем классам. -->
-        <Root level="INFO">
+        <Root level="DEBUG">
             <AppenderRef ref="Console"/> <!-- Логи выводятся в консоль -->
             <AppenderRef ref="FileLogger"/> <!-- Логи записываются в app.log -->
             <AppenderRef ref="ErrorFileLogger"/> <!-- Ошибки ERROR записываются в error.log -->

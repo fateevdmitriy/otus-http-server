@@ -12,13 +12,12 @@ public enum HttpMethod {
         this.name = name;
     }
 
-    public static HttpMethod getHttpMethodByValue(String strName) {
+    public static boolean contains (String strName) {
         for (HttpMethod method : HttpMethod.values()) {
             if (method.name.equalsIgnoreCase(strName)) {
-                return method;
+                return true;
             }
         }
-        return null;
+        return false;
     }
-
 }

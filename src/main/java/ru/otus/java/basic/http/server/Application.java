@@ -80,7 +80,7 @@ public class Application {
                 System.lineSeparator() + "Номер порта должен быть в диапазоне " + minServerPort + "-" + maxServerPort +":");
         String userInputStr = scanner.nextLine();
         if (userInputStr.isEmpty()) {
-            logger.error("Не задан номер порта сервера. Будет использоваться порт по-умолчанию, указанный в файле свойств.");
+            logger.error("Не задан номер порта сервера. Будет использоваться порт по-умолчанию, указанный в файле свойств: {}", defaultServerPort);
             return defaultServerPort;
         }
         int serverPort;
