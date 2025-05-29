@@ -91,8 +91,8 @@ public class HttpResponse {
     }
 
     public byte[] compose() {
-        StringBuilder responseBuilder = new StringBuilder();
-        responseBuilder.append(this.getProtocol())
+        StringBuffer responseBuffer = new StringBuffer();
+        responseBuffer.append(this.getProtocol())
                         .append(" ")
                         .append(this.getStatusCode())
                         .append(" ")
@@ -100,23 +100,23 @@ public class HttpResponse {
                         .append(System.lineSeparator());
         if (!headers.isEmpty()) {
             for (Map.Entry<String,String> entry : headers.entrySet()) {
-                responseBuilder.append(entry.getKey())
+                responseBuffer.append(entry.getKey())
                                .append(": ")
                                .append(entry.getValue())
                                .append(System.lineSeparator());
             }
         }
-        responseBuilder.append(System.lineSeparator());
+        responseBuffer.append(System.lineSeparator());
 
         byte[] result = new byte[0];
         if (textBody != null && !textBody.isEmpty()) {
-            responseBuilder.append(textBody);
-            logger.debug("Response with textBody:{}{}", System.lineSeparator(), responseBuilder);
-            result = responseBuilder.toString().getBytes(StandardCharsets.UTF_8);
+            responseBuffer.append(textBody);
+            logger.debug("Response with textBody:{}{}", System.lineSeparator(), responseBuffer);
+            result = responseBuffer.toString().getBytes(StandardCharsets.UTF_8);
         } else if (fileBody != null && fileBody.length > 0) {
             try {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                baos.write(responseBuilder.toString().getBytes(StandardCharsets.UTF_8));
+                baos.write(responseBuffer.toString().getBytes(StandardCharsets.UTF_8));
                 baos.write(fileBody);
                 logger.debug("Response with fileBody:{}{}", System.lineSeparator(), baos.toString(StandardCharsets.UTF_8));
                 result = baos.toByteArray();
@@ -125,7 +125,7 @@ public class HttpResponse {
                 e.printStackTrace();
             }
         } else {
-            result = responseBuilder.toString().getBytes(StandardCharsets.UTF_8);
+            result = responseBuffer.toString().getBytes(StandardCharsets.UTF_8);
         }
         return result;
     }

@@ -25,27 +25,8 @@ public class ClientHandler implements Runnable {
 
     @Override
     public void run() {
-        logger.info("Новый клиент подключился к серверу.");
-        StringBuilder stringBuilder = new StringBuilder();
         try {
-            InputStream inputStream = clientSocket.getInputStream();
-            if (inputStream != null) {
-                BufferedInputStream bufInStream = new BufferedInputStream(inputStream);
-                int bufferSize = Application.getClientHandlerBufferSize();
-                byte[] buffer = new byte[bufferSize];
-                int bytesRead = -1;
-                while ((bytesRead = bufInStream.read(buffer)) != -1) {
-                    if (bytesRead > 0) {
-                        stringBuilder.append(new String(buffer, 0, bytesRead));
-                    }
-                    if (bytesRead < bufferSize) {
-                        break;
-                    }
-                }
-            } else {
-                throw new IOException("Не удалось получить соединение клиента с сервером.");
-            }
-            String rawRequest = stringBuilder.toString();
+            String rawRequest = readRawRequestFromClient(clientSocket);
             logger.debug("rawRequest:{}{}", System.lineSeparator(), rawRequest);
             if (rawRequest.isEmpty()) {
                 logger.error("Получен пустой запрос от клиента.");
@@ -82,5 +63,28 @@ public class ClientHandler implements Runnable {
         } catch (IOException e) {
             logger.error("Возникло исключение при завершении соединения клиента с сервером.");
         }
+    }
+
+    private String readRawRequestFromClient(Socket clientSocket) throws IOException {
+        StringBuffer stringBuffer = new StringBuffer();
+        InputStream inputStream = clientSocket.getInputStream();
+        logger.info("Новый клиент подключился к серверу.");
+        if (inputStream != null) {
+            BufferedInputStream bufInStream = new BufferedInputStream(inputStream);
+            int bufferSize = Application.getClientHandlerBufferSize();
+            byte[] buffer = new byte[bufferSize];
+            int bytesRead = -1;
+            while ((bytesRead = bufInStream.read(buffer)) != -1) {
+                if (bytesRead > 0) {
+                    stringBuffer.append(new String(buffer, 0, bytesRead));
+                }
+                if (bytesRead < bufferSize) {
+                    break;
+                }
+            }
+        } else {
+            throw new IOException("Не удалось получить соединение клиента с сервером.");
+        }
+        return stringBuffer.toString();
     }
 }
