@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 
 public class HttpRequest {
     private static final Logger logger = LogManager.getLogger(HttpRequest.class);
@@ -66,11 +65,11 @@ public class HttpRequest {
     }
 
     public void parse() throws IOException {
-        logger.info("Запуск парсинга HttpRequest. На вход получен raw request:{}{}", System.lineSeparator(), rawRequest);
+        logger.info("Запуск парсинга HttpRequest.");
 
         BufferedReader reader = new BufferedReader(new StringReader(rawRequest));
         String initial = reader.readLine().trim();
-        if (initial == null || initial.isEmpty()) {
+        if (initial.isEmpty()) {
             throw new MalformedURLException("Не задана строка инициализации HTTP-запроса: " + initial);
         }
         String[] elements = initial.split("\\s");

@@ -47,7 +47,6 @@ public class Dispatcher {
             }
 
             Map<String, RequestProcessor> processors = methods.get(request.getUri());
-            logger.info("processors: {}", processors);
 
             if (!processors.containsKey(request.getMethod().toString())) {
                 if (request.getMethod().equals(HttpMethod.POST) && processors.containsKey("GET")) {

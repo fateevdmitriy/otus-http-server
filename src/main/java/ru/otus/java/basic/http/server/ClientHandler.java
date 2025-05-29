@@ -47,7 +47,7 @@ public class ClientHandler implements Runnable {
         } catch (NotAcceptableResponseException e) {
             new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(out);
         } catch (IOException e) {
-            new HttpErrorProcessor("503 SERVICE UNAVAILABLE", "Возникло исключение при соединении клиента с сервером." + e.getMessage()).execute(out);
+            new HttpErrorProcessor("503 SERVICE UNAVAILABLE", e.getMessage()).execute(out);
         } catch (Exception e) {
             new HttpErrorProcessor("500 INTERNAL SERVER ERROR", e.getMessage()).execute(out);
         } finally {
@@ -69,21 +69,18 @@ public class ClientHandler implements Runnable {
         StringBuffer stringBuffer = new StringBuffer();
         InputStream inputStream = clientSocket.getInputStream();
         logger.info("Новый клиент подключился к серверу.");
-        if (inputStream != null) {
-            BufferedInputStream bufInStream = new BufferedInputStream(inputStream);
-            int bufferSize = Application.getClientHandlerBufferSize();
-            byte[] buffer = new byte[bufferSize];
-            int bytesRead = -1;
-            while ((bytesRead = bufInStream.read(buffer)) != -1) {
-                if (bytesRead > 0) {
-                    stringBuffer.append(new String(buffer, 0, bytesRead));
-                }
-                if (bytesRead < bufferSize) {
-                    break;
-                }
+        if (inputStream == null) { throw new IOException("Не удалось получить соединение клиента с сервером."); }
+        BufferedInputStream bufInStream = new BufferedInputStream(inputStream);
+        int bufferSize = Application.getClientHandlerBufferSize();
+        byte[] buffer = new byte[bufferSize];
+        int bytesRead = -1;
+        while ((bytesRead = bufInStream.read(buffer)) != -1) {
+            if (bytesRead > 0) {
+                stringBuffer.append(new String(buffer, 0, bytesRead));
             }
-        } else {
-            throw new IOException("Не удалось получить соединение клиента с сервером.");
+            if (bytesRead < bufferSize) {
+                break;
+            }
         }
         return stringBuffer.toString();
     }

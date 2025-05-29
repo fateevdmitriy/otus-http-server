@@ -12,13 +12,13 @@ public class HttpResponse {
     private static final Logger logger = LogManager.getLogger(HttpResponse.class);
     private static final String HEADER_KEY_CONTENT_TYPE = "Content-Type";
 
-    private String protocol;
-    private String statusCode;
-    private String statusText;
-    private Map<String,String> headers;
+    private final String protocol;
+    private final String statusCode;
+    private final String statusText;
+    private final Map<String,String> headers;
     private String textBody;
     private byte[] fileBody;
-    private byte[] bytes;
+    private final byte[] bytes;
 
     public String getProtocol() {
         return protocol;
@@ -101,7 +101,7 @@ public class HttpResponse {
         if (!headers.isEmpty()) {
             for (Map.Entry<String,String> entry : headers.entrySet()) {
                 responseBuffer.append(entry.getKey())
-                               .append(": ")
+                               .append(":")
                                .append(entry.getValue())
                                .append(System.lineSeparator());
             }
@@ -121,10 +121,11 @@ public class HttpResponse {
                 logger.debug("Response with fileBody:{}{}", System.lineSeparator(), baos.toString(StandardCharsets.UTF_8));
                 result = baos.toByteArray();
             } catch (IOException e) {
-                logger.info("Возникло исключение при формировании отклика сервером. {}", e.getMessage());
+                logger.error("Возникло исключение при формировании отклика сервером. {}", e.getMessage());
                 e.printStackTrace();
             }
         } else {
+            logger.debug("Response without body :{}{}", System.lineSeparator(), responseBuffer);
             result = responseBuffer.toString().getBytes(StandardCharsets.UTF_8);
         }
         return result;
