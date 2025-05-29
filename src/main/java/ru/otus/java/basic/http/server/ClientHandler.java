@@ -2,46 +2,54 @@ package ru.otus.java.basic.http.server;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.BadRequestException;
+import ru.otus.java.basic.http.server.exceptions.MethodNotAllowedException;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
+import ru.otus.java.basic.http.server.exceptions.NotFoundException;
+import ru.otus.java.basic.http.server.processors.HttpErrorProcessor;
 
 import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable {
-    private static final int BUFFER_SIZE = 8192;  
     private final Socket clientSocket;
     private final Dispatcher dispatcher;
+    private final OutputStream out;
     private static final Logger logger = LogManager.getLogger(ClientHandler.class);
 
-    public ClientHandler(Socket clientSocket) {
+    public ClientHandler(Socket clientSocket) throws IOException {
         this.clientSocket = clientSocket;
         this.dispatcher = new Dispatcher();
+        this.out = clientSocket.getOutputStream();
     }
 
     @Override
     public void run() {
         try {
-            logger.info("Новый клиент подключился к серверу.");
-            byte[] buffer = new byte[BUFFER_SIZE];
-            int n = clientSocket.getInputStream().read(buffer);
-            if (n == 0) {
-                logger.error("Получено пустое сообщение от клиента.");
-                throw new IOException("Получено пустое сообщение от клиента.");
-            }
-            if (n < 0) {
-                logger.error("Получено битое сообщение от клиента.");
-                throw new IOException("Получено битое сообщение от клиента.");
-            } 
-            String rawRequest = new String(buffer, 0, n);
+            String rawRequest = readRawRequestFromClient(clientSocket);
+            logger.debug("rawRequest:{}{}", System.lineSeparator(), rawRequest);
             if (rawRequest.isEmpty()) {
                 logger.error("Получен пустой запрос от клиента.");
-                throw new IOException("Получен пустой запрос от клиента.");
+                return;
             }
+
             HttpRequest request = new HttpRequest(rawRequest);
             request.info(true);
-            dispatcher.execute(request, clientSocket.getOutputStream());
+            request.checkLength();
+            dispatcher.execute(request, out);
+
+        } catch (BadRequestException e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(out);
+        } catch (NotFoundException e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(out);
+        } catch (MethodNotAllowedException e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(out);
+        } catch (NotAcceptableResponseException e) {
+            new HttpErrorProcessor(e.getCode(), e.getMessage()).execute(out);
         } catch (IOException e) {
-            logger.error("Возникла исключительная ситуация при выполнении соединения клиента с сервером. {}", e.getMessage());
-            e.printStackTrace();
+            new HttpErrorProcessor("503 SERVICE UNAVAILABLE", e.getMessage()).execute(out);
+        } catch (Exception e) {
+            new HttpErrorProcessor("500 INTERNAL SERVER ERROR", e.getMessage()).execute(out);
         } finally {
             disconnect();
         }
@@ -49,16 +57,31 @@ public class ClientHandler implements Runnable {
 
     public void disconnect() {
         try {
-            if (clientSocket.getInputStream() != null) {
-                clientSocket.getInputStream().close();
+            if (clientSocket != null) {
+                clientSocket.close();
             }
-            if (clientSocket.getOutputStream() != null) {
-                clientSocket.getOutputStream().close();
-            }
-            clientSocket.close();             
         } catch (IOException e) {
-            logger.error("Возникла исключительная ситуация при завершении соединения клиента с сервером.");
-            e.printStackTrace();
+            logger.error("Возникло исключение при завершении соединения клиента с сервером.");
         }
+    }
+
+    private String readRawRequestFromClient(Socket clientSocket) throws IOException {
+        StringBuffer stringBuffer = new StringBuffer();
+        InputStream inputStream = clientSocket.getInputStream();
+        logger.info("Новый клиент подключился к серверу.");
+        if (inputStream == null) { throw new IOException("Не удалось получить соединение клиента с сервером."); }
+        BufferedInputStream bufInStream = new BufferedInputStream(inputStream);
+        int bufferSize = Application.getClientHandlerBufferSize();
+        byte[] buffer = new byte[bufferSize];
+        int bytesRead = -1;
+        while ((bytesRead = bufInStream.read(buffer)) != -1) {
+            if (bytesRead > 0) {
+                stringBuffer.append(new String(buffer, 0, bytesRead));
+            }
+            if (bytesRead < bufferSize) {
+                break;
+            }
+        }
+        return stringBuffer.toString();
     }
 }

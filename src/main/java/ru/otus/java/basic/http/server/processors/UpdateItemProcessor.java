@@ -16,19 +16,20 @@ import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
+import ru.otus.java.basic.http.server.exceptions.NotFoundException;
 
-public class CreateItemProcessor implements RequestProcessor {
-    private static final Logger logger = LogManager.getLogger(CreateItemProcessor.class);
+public class UpdateItemProcessor implements RequestProcessor {
+    private static final Logger logger = LogManager.getLogger(UpdateItemProcessor.class);
     private static final String PROCESSOR_CONTENT_TYPE = "text/html";
     private final ItemsDatabaseProvider itemsDbProvider;
 
-    public CreateItemProcessor(ItemsDatabaseProvider itemsDbProvider) {
+    public UpdateItemProcessor(ItemsDatabaseProvider itemsDbProvider) {
         this.itemsDbProvider = itemsDbProvider;
     }
 
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
-        logger.info("Запущен обработчик HTTP-запросов: {} ", CreateItemProcessor.class.getName());
+        logger.info("Запущен обработчик HTTP-запросов: {} ", UpdateItemProcessor.class.getName());
 
         if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(PROCESSOR_CONTENT_TYPE.toLowerCase())) {
             throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
@@ -36,23 +37,27 @@ public class CreateItemProcessor implements RequestProcessor {
         }
 
         Gson gson = new Gson();
-        Item newItem = gson.fromJson(request.getBody().toString(), Item.class);
-        logger.debug("Название нового продукта: {}", newItem.getTitle());
-        logger.debug("Цена нового продукта: {}", newItem.getPrice());
-        logger.debug("Вес нового продукта: {}", newItem.getWeight());
-        if (newItem.getTitle() == null || newItem.getTitle().isEmpty()) {
+        Item updItem = gson.fromJson(request.getBody().toString(), Item.class);
+        if (updItem.getId() == null) {
+            throw new BadRequestException("400 BAD REQUEST", "В параметре запроса идентификатор продукта не может быть пустым.");
+        }
+        if (updItem.getTitle() == null || updItem.getTitle().isEmpty()) {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса название продукта не может быть пустым.");
         }
-        if (newItem.getPrice() != null && newItem.getPrice().compareTo(BigDecimal.ZERO) < 0) {
+        if (updItem.getPrice() != null && updItem.getPrice().compareTo(BigDecimal.ZERO) < 0) {
             throw new BadRequestException("400 BAD REQUEST", "В параметре запроса цена продукта не может быть отрицательной.");
         }
-        int itemsAddedCnt = itemsDbProvider.addItem(newItem);
-        logger.info("Добавлено товаров: {}",itemsAddedCnt);
+        if (itemsDbProvider.getItemById(updItem.getId()) == null) {
+            throw new NotFoundException("404 PAGE NOT FOUND", "Запрошенный URI не найден на Web-сервере.");
+        }
+        int itemsUpdatedCnt = itemsDbProvider.updateItem(updItem);
+        logger.info("Обновлено товаров: {}", itemsUpdatedCnt);
 
-        Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
-        HttpResponse response = new HttpResponse(Application.getHttpVersion(), "201", "Created", responseHeaders);
+        Map<String, String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
+        HttpResponse response = new HttpResponse(Application.getHttpVersion(), "200", "OK", responseHeaders);
         response.info();
         response.checkLength();
         output.write(response.getBytes());
     }
+
 }

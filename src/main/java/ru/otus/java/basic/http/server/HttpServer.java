@@ -1,5 +1,6 @@
 package ru.otus.java.basic.http.server;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.ExecutorService;
@@ -18,18 +19,19 @@ public class HttpServer {
     public void start(int numThreads) {
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            logger.info("Сервер запущен на порту: {}", port);
+            logger.info("Сервер запущен на порту {}", port);
             serverSocket.setReuseAddress(true);
             while (true) {
                 Socket clientSocket = serverSocket.accept();                 
                 ClientHandler clientHandler = new ClientHandler(clientSocket);
                 executorService.execute(clientHandler);
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
+            logger.error("Возникло исключение при запуске сервера. {}", e.getMessage());
             e.printStackTrace();
         } finally {
             executorService.shutdown();
-            logger.info("Сервер завершил работу на порту: {}", port);
+            logger.info("Сервер завершил работу на порту {}", port);
         }
     }
 }

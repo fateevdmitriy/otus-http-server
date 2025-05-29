@@ -1,0 +1,157 @@
+package ru.otus.java.basic.http.server;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+public class HttpResponse {
+    private static final Logger logger = LogManager.getLogger(HttpResponse.class);
+    private static final String HEADER_KEY_CONTENT_TYPE = "Content-Type";
+
+    private final String protocol;
+    private final String statusCode;
+    private final String statusText;
+    private final Map<String,String> headers;
+    private String textBody;
+    private byte[] fileBody;
+    private final byte[] bytes;
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public String getStatusCode() {
+        return statusCode;
+    }
+
+    public String getStatusText() {
+        return statusText;
+    }
+
+    public byte[] getBytes() {
+        return bytes;
+    }
+
+    public String getHeader(String key) {
+        if (headers.containsKey(key)) {
+            return key + ": " +headers.get(key);
+        }
+        return null;
+    }
+
+    public String getHeaderContentType() {
+        if (headers.containsKey(HEADER_KEY_CONTENT_TYPE) && headers.get(HEADER_KEY_CONTENT_TYPE) != null) {
+            return HEADER_KEY_CONTENT_TYPE + ": " +headers.get(HEADER_KEY_CONTENT_TYPE);
+        }
+        return null;
+    }
+
+    public HttpResponse(String protocol,
+                        String statusCode,
+                        String statusText,
+                        Map<String,String> headers
+                        ) {
+        this.protocol = protocol;
+        this.statusCode = statusCode;
+        this.statusText = statusText;
+        this.headers = headers;
+        this.bytes = this.compose();
+    }
+
+    public HttpResponse(String protocol,
+                        String statusCode,
+                        String statusText,
+                        Map<String,String> headers,
+                        String textBody
+                        ) {
+        this.protocol = protocol;
+        this.statusCode = statusCode;
+        this.statusText = statusText;
+        this.headers = headers;
+        this.textBody = textBody;
+        this.bytes = this.compose();
+    }
+
+    public HttpResponse(String protocol,
+                        String statusCode,
+                        String statusText,
+                        Map<String,String> headers,
+                        byte[] fileBody
+                        ) {
+        this.protocol = protocol;
+        this.statusCode = statusCode;
+        this.statusText = statusText;
+        this.headers = headers;
+        this.fileBody = fileBody;
+        this.bytes = this.compose();
+    }
+
+    public byte[] compose() {
+        StringBuffer responseBuffer = new StringBuffer();
+        responseBuffer.append(this.getProtocol())
+                        .append(" ")
+                        .append(this.getStatusCode())
+                        .append(" ")
+                        .append(this.getStatusText())
+                        .append(System.lineSeparator());
+        if (!headers.isEmpty()) {
+            for (Map.Entry<String,String> entry : headers.entrySet()) {
+                responseBuffer.append(entry.getKey())
+                               .append(":")
+                               .append(entry.getValue())
+                               .append(System.lineSeparator());
+            }
+        }
+        responseBuffer.append(System.lineSeparator());
+
+        byte[] result = new byte[0];
+        if (textBody != null && !textBody.isEmpty()) {
+            responseBuffer.append(textBody);
+            logger.debug("Response with textBody:{}{}", System.lineSeparator(), responseBuffer);
+            result = responseBuffer.toString().getBytes(StandardCharsets.UTF_8);
+        } else if (fileBody != null && fileBody.length > 0) {
+            try {
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                baos.write(responseBuffer.toString().getBytes(StandardCharsets.UTF_8));
+                baos.write(fileBody);
+                logger.debug("Response with fileBody:{}{}", System.lineSeparator(), baos.toString(StandardCharsets.UTF_8));
+                result = baos.toByteArray();
+            } catch (IOException e) {
+                logger.error("Возникло исключение при формировании отклика сервером. {}", e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            logger.debug("Response without body :{}{}", System.lineSeparator(), responseBuffer);
+            result = responseBuffer.toString().getBytes(StandardCharsets.UTF_8);
+        }
+        return result;
+    }
+
+    public int contentLength() throws IOException {
+        if (this.getBytes() == null) {
+            throw new IOException("Ответ сервера не может быть пустым.");
+        }
+        return this.getBytes().length;
+    }
+
+    public void checkLength() throws IOException {
+        if (this.contentLength() > Application.getHttpResponseSizeLimit()) {
+            throw new IOException("Размер ответа сервера в " + this.contentLength() + " байт превышает установленный лимит в " + Application.getHttpResponseSizeLimit() + " байт.");
+        }
+    }
+    public void info() throws IOException {
+        logger.info("{}HTTP Response Info:", System.lineSeparator());
+        logger.info("PROTOCOL: {}", protocol);
+        logger.info("STATUS CODE: {}", statusCode);
+        logger.info("STATUS TEXT: {}", statusText);
+        logger.info("HEADERS: {}",  headers);
+        logger.info("TEXT BODY: {}",  textBody);
+        logger.info("FILE BODY: {}",  fileBody);
+        logger.info("SIZE: {}", contentLength());
+        logger.info("SIZE_LIMIT: {}", Application.getHttpResponseSizeLimit());
+    }
+}

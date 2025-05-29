@@ -1,0 +1,81 @@
+package ru.otus.java.basic.http.server.processors;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.Application;
+import ru.otus.java.basic.http.server.HttpRequest;
+import ru.otus.java.basic.http.server.HttpResponse;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
+
+public class HttpErrorProcessor implements RequestProcessor {
+    private static final Logger logger = LogManager.getLogger(HttpErrorProcessor.class);
+    private static final String FILEPATH = "static/";
+    private static final String PROCESSOR_CONTENT_TYPE = "text/html";
+
+    private final String errorCode;
+    private final String errorMessage;
+
+    public HttpErrorProcessor(String errorCode, String errorMessage) {
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+    }
+
+    @Override
+    public void execute(HttpRequest request, OutputStream output) {
+        logger.info("Для обработки ошибки {} запущен обработчик HTTP-запросов: {} ", errorCode, HttpErrorProcessor.class.getName());
+
+        String errorCodePattern = "${errorCode}";
+        String errorMessagePattern = "${errorMessage}";
+        String[] elements = errorCode.split(" ",2);
+        String filename= "error_" + elements[0] + ".html";
+        logger.debug("Имя файла-шаблона описания ошибки: {}", filename);
+        File errorFile = new File(FILEPATH + filename);
+        if (!errorFile.exists() || errorFile.isDirectory()) {
+            logger.debug("Не найден файл-шаблон описания ошибки: {}, будет использован общий файл.", filename);
+            filename= "error.html";
+        }
+        try {
+            Path filePath = Paths.get(FILEPATH, filename);
+            byte[] fileBytes = Files.readAllBytes(filePath);
+            String fileContent = new String(fileBytes, StandardCharsets.UTF_8);
+            String modifiedContent = fileContent
+                    .replace(errorCodePattern, errorCode)
+                    .replace(errorMessagePattern, errorMessage);
+            HttpResponse response = getHttpResponse(modifiedContent, elements);
+            output.write(response.getBytes());
+        } catch (IOException e) {
+            logger.error("Возникла исключительная ситуация при выполнении обработчика HTTP-ошибок.");
+            e.printStackTrace();
+        }
+
+        if (request != null && !request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(PROCESSOR_CONTENT_TYPE.toLowerCase())) {
+            throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+                    + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
+        }
+    }
+
+    public void execute(OutputStream output) {
+        execute(null, output);
+    }
+
+    private static HttpResponse getHttpResponse(String content, String[] elements) throws IOException {
+        byte[] contentBytes = content.getBytes(StandardCharsets.UTF_8);
+        Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE,
+                                                    "Content-Length", String.valueOf(contentBytes.length),
+                                                    "Content-Disposition", "inline"
+                                                   );
+        HttpResponse response = new HttpResponse(Application.getHttpVersion(), elements[0], elements[1], responseHeaders, contentBytes);
+        response.info();
+        response.checkLength();
+        return response;
+    }
+}

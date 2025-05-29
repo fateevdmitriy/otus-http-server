@@ -1,43 +1,55 @@
 package ru.otus.java.basic.http.server.processors;
 
+import ru.otus.java.basic.http.server.Application;
 import ru.otus.java.basic.http.server.HttpRequest;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
+import java.util.Map;
+
+import ru.otus.java.basic.http.server.HttpResponse;
 import ru.otus.java.basic.http.server.exceptions.BadRequestException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import ru.otus.java.basic.http.server.exceptions.NotAcceptableResponseException;
 
 public class CalculatorProcessor implements RequestProcessor {
     private static final Logger logger = LogManager.getLogger(CalculatorProcessor.class);
-    
+    private static final String PROCESSOR_CONTENT_TYPE = "text/html";
+
     @Override
     public void execute(HttpRequest request, OutputStream output) throws IOException {
         logger.info("Запущен обработчик HTTP-запросов: {} ", CalculatorProcessor.class.getName());
+
+        if (!request.getHeaderAccept().equals("*/*") && !request.getHeaderAccept().toLowerCase().contains(PROCESSOR_CONTENT_TYPE.toLowerCase())) {
+            throw new NotAcceptableResponseException("406 NOT ACCEPTABLE", "Тип ответа сервера: "
+                    + PROCESSOR_CONTENT_TYPE + ", клиент принимает типы: " + request.getHeaderAccept());
+        }
+
         if (!request.containsParameter("a")) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Отсутствует параметр запроса 'a'");
+            throw new BadRequestException("400 BAD REQUEST", "Отсутствует параметр запроса 'a'");
         }
         if (!request.containsParameter("b")) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Отсутствует параметр запроса 'b'");
+            throw new BadRequestException("400 BAD REQUEST", "Отсутствует параметр запроса 'b'");
         }
         int a;
         try {
             a = Integer.parseInt(request.getParameter("a"));    
         } catch (NumberFormatException e) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Параметр запроса а не является целым числом");    
+            throw new BadRequestException("400 BAD REQUEST", "Параметр запроса а не является целым числом");
         }
         int b;
         try {
             b = Integer.parseInt(request.getParameter("b"));
         } catch (NumberFormatException e) {
-            throw new BadRequestException("INCORRECT_REQUEST_DATA", "Параметр запроса b не является целым числом");
+            throw new BadRequestException("400 BAD REQUEST", "Параметр запроса b не является целым числом");
         }
-        String response = "" +
-                "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: text/html\r\n" +
-                "\r\n" +
-                "<html><body><h1>" + a + " + " + b + " = " + (a + b) + "</h1></body></html>";
-        output.write(response.getBytes(StandardCharsets.UTF_8));
+
+        final String HTML_BODY_CALC = "<html><body><h1>" + a + " + " + b + " = " + (a + b) + "</h1></body></html>";
+        Map<String,String> responseHeaders = Map.of("Content-Type", PROCESSOR_CONTENT_TYPE);
+        HttpResponse response = new HttpResponse(Application.getHttpVersion(), "200", "OK", responseHeaders, HTML_BODY_CALC);
+        response.info();
+        response.checkLength();
+        output.write(response.getBytes());
     }
 }
